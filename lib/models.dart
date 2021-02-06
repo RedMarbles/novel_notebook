@@ -291,19 +291,32 @@ Future<bool> deleteNode(Database db, Node node) async {
   final children = await getChildren(db, node.nodeId);
   if (children.length > 0) return false;
 
-  // Delete node
-  final int count = await db.delete('nodes');
-  if (count != 1) {
-    errorAndRollback();
-    return false;
-  }
-
   // Delete relations to parent nodes
   final int _countLinks = await db.delete(
     'nodes_nodes',
     where: 'childId = ?',
     whereArgs: [node.nodeId],
   );
+
+  // Delete nicknames linked to node
+  final nicknames = await getNicknames(db, node.nodeId);
+  nicknames.forEach((nickname) async {
+    await deleteNickname(db, nickname);
+  });
+
+  // Delete threads linked to node
+  final threads = await getThreadsInNode(db, node.nodeId);
+  threads.forEach((thread) async {
+    await deleteNoteThread(db, thread);
+  });
+
+  // Delete node
+  final int count =
+      await db.delete('nodes', where: 'nodeId = ?', whereArgs: [node.nodeId]);
+  if (count != 1) {
+    errorAndRollback();
+    return false;
+  }
 
   return true;
 }
