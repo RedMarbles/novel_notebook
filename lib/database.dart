@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -95,13 +96,24 @@ Future<Database> initializeDatabases(String novelName) async {
   // Ensure widgets are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Path to the database
+  final databasePath =
+      join(await getDatabasesPath(), '${novelName}_notebook.db');
+
+  developer.log("Opening database located at : $databasePath",
+      name: 'database.initializeDatabases()');
+
   // Open the database
   final Future<Database> database = openDatabase(
-    // Path to the database
-    join(await getDatabasesPath(), '${novelName}_notebook.db'),
+    databasePath,
     // When the database is first created, create the tables in the database
     onCreate: (db, version) async {
-      // Create the 5 databases
+      developer.log(
+          "Database not found. Creating new database at : $databasePath",
+          name: 'database.initializeDatabases()');
+
+      // Create the 6 databases
+      await db.execute(CREATE_TABLE_CATEGORIES);
       await db.execute(CREATE_TABLE_NODES);
       await db.execute(CREATE_TABLE_NODES_NODES);
       await db.execute(CREATE_TABLE_NICKNAMES);
