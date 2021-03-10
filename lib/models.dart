@@ -2,7 +2,10 @@
  */
 
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:sqflite/sqflite.dart';
+
+// TODO: Add logging for every function here
 
 class Category {
   final int categoryId;
@@ -69,6 +72,8 @@ Future<List<Category>> getCategories(Database db) async {
 
 // Retrieve a specific node from the 'nodes' table
 Future<Node> getNode(Database db, int nodeId) async {
+  developer.log('Attempting to get node with id $nodeId',
+      name: 'models.getNode()');
   final List<Map<String, dynamic>> result = await db.query(
     'nodes',
     columns: ['nodeId', 'name', 'categoryId'],
@@ -76,6 +81,8 @@ Future<Node> getNode(Database db, int nodeId) async {
     whereArgs: [nodeId],
   );
   if (result.length != 1) return null;
+  developer.log('Successfully retrieved node with node id $nodeId',
+      name: 'models.getNode()');
   return Node(
     result[0]['nodeId'],
     result[0]['name'],
@@ -85,12 +92,16 @@ Future<Node> getNode(Database db, int nodeId) async {
 
 // Retrieve the list of nicknames attached to a specific node
 Future<List<Nickname>> getNicknames(Database db, int nodeId) async {
+  developer.log('Attempting to fetch nicknames of node id $nodeId',
+      name: 'models.getNicknames()');
   final List<Map<String, dynamic>> result = await db.query(
     'nicknames',
     columns: ['nicknameId', 'nickname'],
     where: 'nodeId = ?',
     whereArgs: [nodeId],
   );
+  developer.log('Successfully retrieved nicknames of node id $nodeId',
+      name: 'models.getNicknames()');
   return List<Nickname>.generate(
       result.length,
       (int index) => Nickname(
@@ -101,15 +112,19 @@ Future<List<Nickname>> getNicknames(Database db, int nodeId) async {
 
 // Retrieve the list of parent nodes of a specific node
 Future<List<Node>> getParents(Database db, int nodeId) async {
+  developer.log('Attempting to fetch parents of node id $nodeId',
+      name: 'models.getParents()');
   final List<Map<String, dynamic>> result = await db.rawQuery(
-      "SELECT n.nodeId as id, n.name as name, n.categoryId as catId"
-      "FROM nodes_nodes r"
-      "INNER JOIN nodes n ON n.nodeId = r.parentId"
-      "WHERE r.childId = ?"
-      "ORDER BY n.nodeId ASC", // Ordering by this for no specific reason
+      'SELECT n.nodeId as id, n.name as name, n.categoryId as catId '
+      'FROM nodes_nodes r '
+      'INNER JOIN nodes n ON n.nodeId = r.parentId '
+      'WHERE r.childId = ? '
+      'ORDER BY n.nodeId ASC; ', // Ordering by this for no specific reason
       [nodeId]);
   // Non-root nodes need at least one parent
   if (nodeId != 1 && result.length < 1) return List<Node>();
+  developer.log('Successfully retrieved parents of node id $nodeId',
+      name: 'models.getParents()');
   return List<Node>.generate(
       result.length,
       (int index) => Node(
@@ -122,11 +137,11 @@ Future<List<Node>> getParents(Database db, int nodeId) async {
 // Retrieve the list of child nodes of a specific node
 Future<List<Node>> getChildren(Database db, int nodeId) async {
   final List<Map<String, dynamic>> result = await db.rawQuery(
-    "SELECT n.nodeId as id, n.name as name, n.categoryId as catId"
-    "FROM nodes_nodes r"
-    "INNER JOIN nodes n ON n.nodeId = r.childId"
-    "WHERE r.parentId = ?"
-    "ORDER BY r.sequence ASC", // Order by the children sequence
+    'SELECT n.nodeId as id, n.name as name, n.categoryId as catId '
+    'FROM nodes_nodes r '
+    'INNER JOIN nodes n ON n.nodeId = r.childId '
+    'WHERE r.parentId = ? '
+    'ORDER BY r.sequence ASC; ', // Order by the children sequence
     [nodeId],
   );
   return List<Node>.generate(
@@ -204,12 +219,17 @@ Future<Node> addNode(
     'nodes',
     {'name': name, 'categoryId': cat.categoryId},
   );
+
   // create link to parent
-  final int _linkId = await db.insert(
+  final int linkId = await db.insert(
     'nodes_nodes',
     {'parentId': parentNode.nodeId, 'childId': nodeId, 'sequence': 1},
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
+  developer.log(
+      'Created link $linkId between nodes ${parentNode.nodeId} and $nodeId',
+      name: 'models.addNode()');
+
   return Node(nodeId, name, cat.categoryId);
 }
 
@@ -227,15 +247,18 @@ Future<void> addParent(Database db, Node childNode, Node parentNode) async {
   if (childNode.nodeId == parentNode.nodeId) return; // Ensure no 0 length loops
   if (childNode.nodeId == 1) return; // Do not add parents for the root node
   final children = await getChildren(db, parentNode.nodeId);
-  final int _linkId = await db.insert(
+  final int linkId = await db.insert(
     'nodes_nodes',
     {
       'parentId': parentNode.nodeId,
       'childId': childNode.nodeId,
-      'sequence': children.length + 1,
+      'sequence': children.length + 1, // TODO: check this sequence id better
     },
     conflictAlgorithm: ConflictAlgorithm.ignore,
   );
+  developer.log(
+      'Created link $linkId between nodes ${parentNode.nodeId} and ${childNode.nodeId}',
+      name: 'models.addParent()');
 }
 
 // Edit an existing node's name
@@ -292,11 +315,14 @@ Future<bool> deleteNode(Database db, Node node) async {
   if (children.length > 0) return false;
 
   // Delete relations to parent nodes
-  final int _countLinks = await db.delete(
+  final int countLinks = await db.delete(
     'nodes_nodes',
     where: 'childId = ?',
     whereArgs: [node.nodeId],
   );
+  developer.log(
+      'Deleted $countLinks links to parents of node ${node.nodeId} - ${node.name}',
+      name: 'models.deleteNode()');
 
   // Delete nicknames linked to node
   final nicknames = await getNicknames(db, node.nodeId);
@@ -350,6 +376,8 @@ Future<NoteThread> getNoteThread(Database db, int threadId) async {
 
 // Fetch message threads of node
 Future<List<NoteThread>> getThreadsInNode(Database db, int nodeId) async {
+  developer.log('Attempting to fetch threads in node id $nodeId',
+      name: 'models.getThreadsInNode()');
   final List<Map<String, dynamic>> result = await db.query('threads',
       columns: ['threadId', 'sequence'],
       where: 'nodeId = ?',
@@ -360,6 +388,8 @@ Future<List<NoteThread>> getThreadsInNode(Database db, int nodeId) async {
     threads.add(await getNoteThread(db, e['threadId']));
   });
 
+  developer.log('Successfully retrieved threads in node id $nodeId',
+      name: 'models.getThreadsInNode()');
   return threads;
 }
 
@@ -427,8 +457,10 @@ Future<bool> deleteNote(Database db, Note note) async {
 // Delete an entire message thread
 Future<bool> deleteNoteThread(Database db, NoteThread thread) async {
   // Delete all the notes in the thread
-  final int _countNotes = await db
+  final int countNotes = await db
       .delete('notes', where: 'threadId = ?', whereArgs: [thread.threadId]);
+  developer.log('Deleted $countNotes notes under thread ${thread.threadId}',
+      name: 'models.deleteNoteThread()');
 
   // Delete the thread itself
   final int count = await db
