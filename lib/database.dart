@@ -120,44 +120,44 @@ Future<Database> initializeDatabases(String novelName) async {
       await db.execute(CREATE_TABLE_THREADS);
       await db.execute(CREATE_TABLE_NOTES);
       // Add the default data and root node into the tree at position 1
-      await db.execute("INSERT INTO categories (categoryId, catName, catColor) "
-          "VALUES "
-          "(1, World, green), "
-          "(2, Person, blue), "
-          "(3, Organization, yellow), "
-          "(4, Family, orange), "
-          "(5, Species, magenta), "
-          "(6, Item, pink), "
-          "(7, Skill, red) ");
-      await db.execute("INSERT INTO nodes (nodeId, name, categoryId) "
-          "VALUES "
-          "(1, root, 1), "
-          "(2, Hero, 2), "
-          "(3, Villain, 2), "
-          "(4, Excalibur, 6)");
-      await db.execute("INSERT INTO nodes_nodes (parentId, childId, sequence) "
-          "VALUES "
-          "(1, 2, 1), " // Hero under Root at pos 1
-          "(1, 3, 2), " // Villain under Root at pos 2
-          "(2, 4, 1), " // Excalibur under Hero at pos 1
-          "(1, 4, 3)"); // Excalibur under Root at pos 3
-      await db.execute("INSERT INTO nicknames (nodeId, nickname) "
-          "VALUES "
-          "(2, Yuusha), "
-          "(2, Link), "
-          "(4, Holy Sword), "
-          "(3, Maou)");
-      await db.execute("INSERT INTO threads (threadId, nodeId, sequence)"
-          "VALUES "
-          "(1, 1, 1), " // Thread in root node
-          "(2, 4, 1), " // Thread 1 in excalibur node
-          "(3, 4, 2)"); // Thread 2 in excalibur node
-      await db.execute("INSERT INTO notes (threadId, message, chapter)"
-          "VALUES "
-          "(1, summary of the world, 1), "
-          "(2, does it even exist?, 1), "
-          "(2, it's hidden in the forbidden forest, 2), "
-          "(3, it's made of meteorite steel and plastic, 1)");
+      await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
+          'VALUES '
+          '(1, "World", "green"), '
+          '(2, "Person", "blue"), '
+          '(3, "Organization", "yellow"), '
+          '(4, "Family", "orange"), '
+          '(5, "Species", "magenta"), '
+          '(6, "Item", "pink"), '
+          '(7, "Skill", "red");');
+      await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
+          'VALUES '
+          '(1, "root", 1), '
+          '(2, "Hero", 2), '
+          '(3, "Villain", 2), '
+          '(4, "Excalibur", 6);');
+      await db.execute('INSERT INTO nodes_nodes (parentId, childId, sequence) '
+          'VALUES '
+          '(1, 2, 1), ' // Hero under Root at pos 1
+          '(1, 3, 2), ' // Villain under Root at pos 2
+          '(2, 4, 1), ' // Excalibur under Hero at pos 1
+          '(1, 4, 3);'); // Excalibur under Root at pos 3
+      await db.execute('INSERT INTO nicknames (nodeId, nickname) '
+          'VALUES '
+          '(2, "Yuusha"), '
+          '(2, "Link"), '
+          '(4, "Holy Sword"), '
+          '(3, "Maou");');
+      await db.execute('INSERT INTO threads (threadId, nodeId, sequence)'
+          'VALUES '
+          '(1, 1, 1), ' // Thread in root node
+          '(2, 4, 1), ' // Thread 1 in excalibur node
+          '(3, 4, 2);'); // Thread 2 in excalibur node
+      await db.execute('INSERT INTO notes (threadId, message, chapter)'
+          'VALUES '
+          '(1, "summary of the world", 1), '
+          '(2, "does it even exist?", 1), '
+          '(2, "it\'s hidden in the forbidden forest", 2), '
+          '(3, "it\'s made of meteorite steel and plastic", 1);');
     },
     // Set the version number, used for database upgrades and downgrades
     version: 1,
