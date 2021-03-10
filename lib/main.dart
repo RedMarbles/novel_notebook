@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screen_tree.dart';
-import 'screen_details.dart';
+import 'package:novelnotebook/screen_novel.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Novel Notebook',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: DetailsScreen(),
+      home: NovelScreen(),
     );
   }
 }
