@@ -1,4 +1,8 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
+import 'package:novelnotebook/models.dart';
+import 'package:sqflite/sqflite.dart';
 
 /* Screen where the individual details of each item are shown
    1. Show item name
@@ -8,47 +12,61 @@ import 'package:flutter/material.dart';
  */
 
 class DetailsScreen extends StatefulWidget {
+  final Database database;
+  final int nodeId;
+
+  const DetailsScreen(this.database, this.nodeId);
+
   @override
   _DetailsScreenState createState() => _DetailsScreenState();
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  Node node = Node(0, "Loading...", 0);
+  List<Node> parents = [];
+  List<Nickname> nicknames = [];
+  List<NoteThread> noteThreads = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.wait([
+      getNode(widget.database, widget.nodeId).whenComplete(() => developer.log(
+          'getNodeComplete',
+          name: 'screen_details._DetailsScreenState.initState()')),
+      getParents(widget.database, widget.nodeId),
+      getNicknames(widget.database, widget.nodeId),
+      getThreadsInNode(widget.database, widget.nodeId),
+    ]).then((futures) {
+      setState(() {
+        node = futures[0];
+        parents = futures[1];
+        nicknames = futures[2];
+        noteThreads = futures[3];
+        developer.log(
+            "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
+            name: 'screen_details._DetailsScreenState.initState()');
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Character Name'), //TODO: Placeholder for item name
+        title: Text(node.name),
       ),
       body: Column(
         children: [
           _WrapListViewer(
             title: 'Parents:',
-            items: [
-              //TODO: Placeholder for item parents
-              'Parent ABC',
-              'Parent Goku',
-              'Parent Kakarot',
-              'Parent Vegeta',
-              'Parent Piccolottroti',
-              'Parent Of 666 Bastards',
-            ],
+            items: parents.map((e) => e.name).toList(),
             generator: (s) => _Parent(s),
           ),
           _WrapListViewer(
             title: 'Alternate names:',
-            items: [
-              //TODO: Placeholder for nicknames
-              'CWAB',
-              'Achuth',
-              'Pot',
-              'Godly',
-              'Tillu',
-              'Pizza',
-              'Moc',
-              'Lappy',
-              'Macha',
-              'Cow',
-            ],
+            items: nicknames.map((e) => e.name).toList(),
             generator: (s) => _Nickname(s),
           )
         ],
@@ -58,6 +76,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 }
 
 class _WrapListViewer extends StatelessWidget {
+  // Todo: just accept the widgets directly, instead of asking for a separate generator
   final String title;
   final List<String> items;
   final Widget Function(String) generator;
