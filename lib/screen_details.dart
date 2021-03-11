@@ -68,7 +68,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
             title: 'Alternate names:',
             items: nicknames.map((e) => e.name).toList(),
             generator: (s) => _Nickname(s),
-          )
+          ),
+          Text('Notes: '),
+          ...List<Widget>.generate(noteThreads.length,
+              (index) => _NoteThreadViewer(noteThreads[index])),
         ],
       ),
     );
@@ -188,6 +191,53 @@ class _Nickname extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _NoteThreadViewer extends StatelessWidget {
+  final NoteThread noteThread;
+
+  _NoteThreadViewer(this.noteThread);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.yellow.shade300,
+      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
+          Text('thread'), // TODO: Remove this placeholder
+          ...List<Widget>.generate(
+              noteThread.notes.length,
+              (index) => _NoteViewer(
+                  noteThread.notes[noteThread.notes.length - index - 1])),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoteViewer extends StatelessWidget {
+  final Note note;
+
+  _NoteViewer(this.note);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Chapter ${note.chapter}',
+          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+        ),
+        Text(note.message),
+        Divider(height: 8, thickness: 1, color: Colors.grey.shade800),
+      ],
     );
   }
 }
