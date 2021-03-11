@@ -349,6 +349,8 @@ Future<bool> deleteNode(Database db, Node node) async {
 
 // Fetch a thread of messages
 Future<NoteThread> getNoteThread(Database db, int threadId) async {
+  developer.log('Attempting to fetch notes in thread id $threadId',
+      name: 'models.getNoteThread()');
   final List<Map<String, dynamic>> result = await db.query(
     'notes',
     columns: ['noteId', 'message', 'chapter'],
@@ -356,6 +358,9 @@ Future<NoteThread> getNoteThread(Database db, int threadId) async {
     whereArgs: [threadId],
     orderBy: 'chapter',
   );
+  developer.log(
+      'Successfully retrieved ${result.length} fetch notes in thread id $threadId',
+      name: 'models.getNoteThread()');
   if (result.length < 1) {
     // TODO: Delete the empty thread
     return null;
@@ -384,11 +389,12 @@ Future<List<NoteThread>> getThreadsInNode(Database db, int nodeId) async {
       whereArgs: [nodeId],
       orderBy: 'sequence');
   final threads = <NoteThread>[];
-  result.forEach((Map<String, dynamic> e) async {
+  for (Map<String, dynamic> e in result) {
     threads.add(await getNoteThread(db, e['threadId']));
-  });
+  }
 
-  developer.log('Successfully retrieved threads in node id $nodeId',
+  developer.log(
+      'Successfully retrieved ${threads.length} threads in node id $nodeId',
       name: 'models.getThreadsInNode()');
   return threads;
 }
