@@ -84,7 +84,9 @@ class _TreeScreenState extends State<TreeScreen> {
           children: _generateTreeStructure(),
         ),
         Center(
-          child: (numLoadingNodes < 1) ? null : CircularProgressIndicator(),
+          child: (numLoadingNodes < 1 && root != null)
+              ? null
+              : CircularProgressIndicator(),
         ),
       ]),
     );
@@ -169,7 +171,7 @@ class _TreeScreenState extends State<TreeScreen> {
   Widget _rowElement(_TreeNode treeNode, int nestLevel) {
     return Container(
       color: Colors.white,
-      margin: EdgeInsets.fromLTRB(0, 0, 0, 1),
+      padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
       child: Row(
         children: [
           SizedBox(
@@ -179,19 +181,26 @@ class _TreeScreenState extends State<TreeScreen> {
             child: Icon(
               (treeNode.expand) ? Icons.arrow_drop_up : Icons.arrow_drop_down,
               size: 32.0,
+              color: (treeNode.children.isEmpty) ? Colors.grey : Colors.black,
             ),
-            onTap: () {
-              treeNode.children.forEach((element) {
-                element.loadChildren(widget: this);
-              });
-              setState(() {
-                treeNode.expand = !treeNode.expand;
-              });
-            },
+            onTap: (treeNode.children.isEmpty)
+                ? null
+                : () {
+                    treeNode.children.forEach((element) {
+                      element.loadChildren(widget: this);
+                    });
+                    setState(() {
+                      treeNode.expand = !treeNode.expand;
+                    });
+                  },
           ),
           Expanded(
-            child: GestureDetector(
-              child: Text(treeNode.node.name),
+            child: InkWell(
+              child: Container(
+                  width: double.infinity,
+                  height: 32.0,
+                  alignment: Alignment.centerLeft,
+                  child: Text(treeNode.node.name)),
               onTap: () {
                 Navigator.push(
                   context,
@@ -224,6 +233,7 @@ class _TreeScreenState extends State<TreeScreen> {
       nestedLvStack.removeLast();
 
       rowList.add(_rowElement(currTreeNode, currNestedLv));
+      rowList.add(Divider(height: 1, thickness: 1, color: Colors.black));
       if (currTreeNode.expand) {
         currTreeNode.children.reversed.forEach((element) {
           treeNodeStack.add(element);
