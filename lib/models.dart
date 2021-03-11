@@ -54,12 +54,17 @@ Future<bool> errorAndRollback() async {
 
 // Retrieve the list of all categories
 Future<List<Category>> getCategories(Database db) async {
+  developer.log('Attempting to fetch information about categories',
+      name: 'models.getCategories()');
   final List<Map<String, dynamic>> result =
       await db.query('categories', columns: [
     'categoryId',
     'catName',
     'catColor',
   ]);
+  developer.log(
+      'Fetched information about ${result.length} categories in the database',
+      name: 'models.getCategories()');
 
   return List<Category>.generate(
       result.length,

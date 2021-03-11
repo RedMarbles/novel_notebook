@@ -26,11 +26,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
   List<Node> parents = [];
   List<Nickname> nicknames = [];
   List<NoteThread> noteThreads = [];
+  List<Category> categories = [];
 
   @override
   void initState() {
     super.initState();
 
+    reloadState();
+  }
+
+  void reloadState() {
     Future.wait([
       getNode(widget.database, widget.nodeId).whenComplete(() => developer.log(
           'getNodeComplete',
@@ -38,12 +43,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
       getParents(widget.database, widget.nodeId),
       getNicknames(widget.database, widget.nodeId),
       getThreadsInNode(widget.database, widget.nodeId),
+      getCategories(widget.database),
     ]).then((futures) {
       setState(() {
         node = futures[0];
         parents = futures[1];
         nicknames = futures[2];
         noteThreads = futures[3];
+        categories = futures[4];
         developer.log(
             "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
             name: 'screen_details._DetailsScreenState.initState()');
@@ -69,9 +76,34 @@ class _DetailsScreenState extends State<DetailsScreen> {
             items: nicknames.map((e) => e.name).toList(),
             generator: (s) => _Nickname(s),
           ),
+          _categoryViewer(),
           Text('Notes: '),
           ...List<Widget>.generate(noteThreads.length,
               (index) => _NoteThreadViewer(noteThreads[index])),
+  Widget _categoryViewer() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
+      child: Row(
+        children: [
+          Text('Category: '),
+          SizedBox(width: 8.0),
+          DropdownButton(
+            value: node.categoryId,
+            items: categories
+                .map((cat) => DropdownMenuItem(
+                      value: cat.categoryId,
+                      child: Text(cat.catName),
+                    ))
+                .toList(),
+            onChanged: (catId) async {
+              await editNodeCategory(
+                widget.database,
+                node,
+                categories.firstWhere((element) => element.categoryId == catId),
+              );
+              reloadState();
+            },
+          ),
         ],
       ),
     );
