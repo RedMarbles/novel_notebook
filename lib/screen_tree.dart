@@ -21,16 +21,17 @@ class _TreeNode {
 
   _TreeNode(this.db, this.node, {this.expand = false}) {}
 
-  Future<void> loadChildren({_TreeScreenState widget}) async {
+  Future<void> loadChildren({@required _TreeScreenState widget}) async {
     if (children != null) return;
+    if (widget == null) return;
 
-    widget?.setLoadingState();
+    widget.setLoadingState();
     final childNodes = await getChildren(db, node.nodeId);
     children = List<_TreeNode>.generate(
       childNodes.length,
       (index) => _TreeNode(db, childNodes[index], expand: false),
     );
-    widget?.unsetLoadingState();
+    widget.unsetLoadingState();
   }
 }
 
