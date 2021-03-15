@@ -23,7 +23,7 @@ class _TreeNode {
 
   Future<void> loadChildren({@required _TreeScreenState widget}) async {
     if (children != null) return;
-    if (widget == null) return;
+    if (db == null || widget == null) return;
 
     widget.setLoadingState();
     final childNodes = await getChildren(db, node.nodeId);
