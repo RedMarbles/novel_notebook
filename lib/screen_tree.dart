@@ -52,6 +52,10 @@ class _TreeScreenState extends State<TreeScreen> {
   void initState() {
     super.initState();
 
+    // Default value of root
+    root = _TreeNode(null, Node(1, 'Loading...', 1), expand: false);
+    root.children = [];
+
     setState(() {
       numLoadingNodes++;
     });
