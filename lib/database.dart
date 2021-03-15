@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 //   categoryId INTEGER PRIMARY KEY
 //   catName    TEXT
 //   catColor   TEXT
-const CREATE_TABLE_CATEGORIES = 'CREATE TABLE categories ( '
+const CREATE_TABLE_CATEGORIES = 'CREATE TABLE IF NOT EXISTS categories ( '
     'categoryId INTEGER PRIMARY KEY, '
     'catName TEXT, '
     'catColor TEXT '
@@ -18,7 +18,7 @@ const CREATE_TABLE_CATEGORIES = 'CREATE TABLE categories ( '
 //   nodeId     INTEGER PRIMARY KEY
 //   categoryId INTEGER FOREIGN KEY
 //   name       TEXT
-const CREATE_TABLE_NODES = 'CREATE TABLE nodes ( '
+const CREATE_TABLE_NODES = 'CREATE TABLE IF NOT EXISTS nodes ( '
     'nodeId INTEGER PRIMARY KEY, '
     'categoryId INTEGER, '
     'name TEXT NON NULL, '
@@ -32,7 +32,7 @@ const CREATE_TABLE_NODES = 'CREATE TABLE nodes ( '
 //   parentId INTEGER FOREIGN KEY  // link to nodes
 //   childId  INTEGER FOREIGN KEY  // link to nodes
 //   sequence INTEGER              // Where this child is in the parent's tree
-const CREATE_TABLE_NODES_NODES = 'CREATE TABLE nodes_nodes ( '
+const CREATE_TABLE_NODES_NODES = 'CREATE TABLE IF NOT EXISTS nodes_nodes ( '
     'parentId INTEGER, '
     'childId INTEGER, '
     'sequence INTEGER, '
@@ -51,7 +51,7 @@ const CREATE_TABLE_NODES_NODES = 'CREATE TABLE nodes_nodes ( '
 //   nicknameId INTEGER PRIMARY KEY
 //   nodeId     INTEGER FOREIGN KEY // link to nodes
 //   nickname TEXT
-const CREATE_TABLE_NICKNAMES = 'CREATE TABLE nicknames ( '
+const CREATE_TABLE_NICKNAMES = 'CREATE TABLE IF NOT EXISTS nicknames ( '
     'nicknameId INTEGER PRIMARY KEY, '
     'nodeId INTEGER, '
     'nickname TEXT NON NULL, '
@@ -65,7 +65,7 @@ const CREATE_TABLE_NICKNAMES = 'CREATE TABLE nicknames ( '
 //   threadId INTEGER PRIMARY KEY
 //   nodeId   INTEGER FOREIGN KEY  // link to nodes
 //   sequence INTEGER   // ordering of message thread among all threads
-const CREATE_TABLE_THREADS = 'CREATE TABLE threads ( '
+const CREATE_TABLE_THREADS = 'CREATE TABLE IF NOT EXISTS threads ( '
     'threadId INTEGER PRIMARY KEY, '
     'nodeId INTEGER, '
     'sequence INTEGER, '
@@ -80,7 +80,7 @@ const CREATE_TABLE_THREADS = 'CREATE TABLE threads ( '
 //   threadId INTEGER FOREIGN KEY // link to threads
 //   message TEXT
 //   chapter REAL // ordering of notes or chapters
-const CREATE_TABLE_NOTES = 'CREATE TABLE notes ( '
+const CREATE_TABLE_NOTES = 'CREATE TABLE IF NOT EXISTS notes ( '
     'noteId INTEGER PRIMARY KEY, '
     'threadId INTEGER, '
     'message TEXT, '
@@ -112,52 +112,8 @@ Future<Database> initializeDatabases(String novelName) async {
           'Database not found. Creating new database at : $databasePath',
           name: 'database.initializeDatabases()');
 
-      // Create the 6 databases
-      await db.execute(CREATE_TABLE_CATEGORIES);
-      await db.execute(CREATE_TABLE_NODES);
-      await db.execute(CREATE_TABLE_NODES_NODES);
-      await db.execute(CREATE_TABLE_NICKNAMES);
-      await db.execute(CREATE_TABLE_THREADS);
-      await db.execute(CREATE_TABLE_NOTES);
-      // Add the default data and root node into the tree at position 1
-      await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
-          'VALUES '
-          '(1, "World", "green"), '
-          '(2, "Person", "blue"), '
-          '(3, "Organization", "yellow"), '
-          '(4, "Family", "orange"), '
-          '(5, "Species", "magenta"), '
-          '(6, "Item", "pink"), '
-          '(7, "Skill", "red");');
-      await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
-          'VALUES '
-          '(1, "root", 1), '
-          '(2, "Hero", 2), '
-          '(3, "Villain", 2), '
-          '(4, "Excalibur", 6);');
-      await db.execute('INSERT INTO nodes_nodes (parentId, childId, sequence) '
-          'VALUES '
-          '(1, 2, 1), ' // Hero under Root at pos 1
-          '(1, 3, 2), ' // Villain under Root at pos 2
-          '(2, 4, 1), ' // Excalibur under Hero at pos 1
-          '(1, 4, 3);'); // Excalibur under Root at pos 3
-      await db.execute('INSERT INTO nicknames (nodeId, nickname) '
-          'VALUES '
-          '(2, "Yuusha"), '
-          '(2, "Link"), '
-          '(4, "Holy Sword"), '
-          '(3, "Maou");');
-      await db.execute('INSERT INTO threads (threadId, nodeId, sequence)'
-          'VALUES '
-          '(1, 1, 1), ' // Thread in root node
-          '(2, 4, 1), ' // Thread 1 in excalibur node
-          '(3, 4, 2);'); // Thread 2 in excalibur node
-      await db.execute('INSERT INTO notes (threadId, message, chapter)'
-          'VALUES '
-          '(1, "summary of the world", 1), '
-          '(2, "does it even exist?", 1), '
-          '(2, "it\'s hidden in the forbidden forest", 2), '
-          '(3, "it\'s made of meteorite steel and plastic", 1);');
+      await setupDatabaseV1(db);
+      await setupSampleDataV1(db);
     },
     // Set the version number, used for database upgrades and downgrades
     version: 1,
@@ -171,4 +127,62 @@ Future<Database> initializeDatabases(String novelName) async {
   );
 
   return database;
+}
+
+Future<void> setupDatabaseV1(Database db) async {
+  // Create the 6 databases
+  await db.execute(CREATE_TABLE_CATEGORIES);
+  await db.execute(CREATE_TABLE_NODES);
+  await db.execute(CREATE_TABLE_NODES_NODES);
+  await db.execute(CREATE_TABLE_NICKNAMES);
+  await db.execute(CREATE_TABLE_THREADS);
+  await db.execute(CREATE_TABLE_NOTES);
+
+  // Add the default categories
+  await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
+      'VALUES '
+      '(1, "World", "green"), '
+      '(2, "Person", "blue"), '
+      '(3, "Organization", "yellow"), '
+      '(4, "Family", "orange"), '
+      '(5, "Species", "magenta"), '
+      '(6, "Item", "pink"), '
+      '(7, "Skill", "red");');
+
+  // Add the root node into the tree at position 1
+  await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
+      'VALUES '
+      '(1, "root", 1); ');
+}
+
+Future<void> setupSampleDataV1(Database db) async {
+  // Insert sample data
+  await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
+      'VALUES '
+      '(2, "Hero", 2), '
+      '(3, "Villain", 2), '
+      '(4, "Excalibur", 6);');
+  await db.execute('INSERT INTO nodes_nodes (parentId, childId, sequence) '
+      'VALUES '
+      '(1, 2, 1), ' // Hero under Root at pos 1
+      '(1, 3, 2), ' // Villain under Root at pos 2
+      '(2, 4, 1), ' // Excalibur under Hero at pos 1
+      '(1, 4, 3);'); // Excalibur under Root at pos 3
+  await db.execute('INSERT INTO nicknames (nodeId, nickname) '
+      'VALUES '
+      '(2, "Yuusha"), '
+      '(2, "Link"), '
+      '(4, "Holy Sword"), '
+      '(3, "Maou");');
+  await db.execute('INSERT INTO threads (threadId, nodeId, sequence)'
+      'VALUES '
+      '(1, 1, 1), ' // Thread in root node
+      '(2, 4, 1), ' // Thread 1 in excalibur node
+      '(3, 4, 2);'); // Thread 2 in excalibur node
+  await db.execute('INSERT INTO notes (threadId, message, chapter)'
+      'VALUES '
+      '(1, "summary of the world", 1), '
+      '(2, "does it even exist?", 1), '
+      '(2, "it\'s hidden in the forbidden forest", 2), '
+      '(3, "it\'s made of meteorite steel and plastic", 1);');
 }
