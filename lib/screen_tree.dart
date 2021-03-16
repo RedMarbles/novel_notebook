@@ -53,27 +53,12 @@ class _TreeScreenState extends State<TreeScreen> {
     super.initState();
 
     // Default value of root
-    root = _TreeNode(null, Node(1, 'Loading...', 1), expand: false);
+    root = _TreeNode(widget.database, Node(_ROOT_NODE_ID, 'Loading...', 1),
+        expand: true);
     root.children = [];
 
-    setState(() {
-      numLoadingNodes++;
-    });
-
-    getNode(widget.database, _ROOT_NODE_ID).then((rootNode) async {
-      _TreeNode _root = _TreeNode(widget.database, rootNode, expand: true);
-      await _root.loadChildren(widget: this);
-
-      // Load the children for one level
-      _root.children.forEach((_treeNode) {
-        _treeNode.loadChildren(widget: this);
-      });
-
-      setState(() {
-        root = _root;
-        numLoadingNodes--;
-      });
-    });
+    // Async task to load the actual tree from the database
+    reloadTree();
   }
 
   @override
@@ -199,9 +184,11 @@ class _TreeScreenState extends State<TreeScreen> {
             child: Icon(
               (treeNode.expand) ? Icons.arrow_drop_up : Icons.arrow_drop_down,
               size: 32.0,
-              color: (treeNode.children.isEmpty) ? Colors.grey : Colors.black,
+              color: (treeNode.children == null || treeNode.children.isEmpty)
+                  ? Colors.grey
+                  : Colors.black,
             ),
-            onTap: (treeNode.children.isEmpty)
+            onTap: (treeNode.children == null || treeNode.children.isEmpty)
                 ? null
                 : () {
                     treeNode.children.forEach((element) {
