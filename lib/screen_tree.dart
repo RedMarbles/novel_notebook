@@ -4,7 +4,7 @@
    2. Needs a drawer to add and remove categories
  */
 
-import 'dart:collection';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart';
@@ -106,12 +106,15 @@ class _TreeScreenState extends State<TreeScreen> {
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Text(node.name),
       ),
-      onTap: () {
+      onTap: () async {
         Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => DetailsScreen(widget.database, node.nodeId),
-            ));
+            )).then((_) {
+          // Reload the tree after navigating back to the tree screen
+          reloadTree();
+        });
       },
     );
   }
@@ -138,7 +141,10 @@ class _TreeScreenState extends State<TreeScreen> {
       numLoadingNodes--;
   }
 
+  // Reload the tree from the database, while retaining the expanded status of each branch
   Future<void> reloadTree() async {
+    developer.log('Reloading database tree...',
+        name: 'screen_tree.TreeScreen.reloadTree()');
     final stack = <_TreeNodePair>[];
     final _TreeNode rootCopy = _TreeNode(
         widget.database, await getNode(widget.database, root.node.nodeId),
@@ -170,6 +176,13 @@ class _TreeScreenState extends State<TreeScreen> {
         stack.add(_TreeNodePair(origChildTreeNode, copyChildTreeNode));
       });
     }
+
+    setState(() {
+      root = rootCopy;
+    });
+
+    developer.log('Reloading database tree complete!',
+        name: 'screen_tree.TreeScreen.reloadTree()');
   }
 
   // Constructs each row element of the ListView, spaced away from the edge by the nest level
@@ -213,7 +226,10 @@ class _TreeScreenState extends State<TreeScreen> {
                     builder: (context) =>
                         DetailsScreen(widget.database, treeNode.node.nodeId),
                   ),
-                );
+                ).then((_) {
+                  // Reload the tree when navigating back to this screen
+                  reloadTree();
+                });
               },
             ),
           ),
