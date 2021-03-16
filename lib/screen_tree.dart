@@ -67,7 +67,18 @@ class _TreeScreenState extends State<TreeScreen> {
       backgroundColor: Colors.blueGrey,
       appBar: AppBar(
         title: Text('Database'), // TODO: give better name
-        // TODO: Add options menu
+        actions: [
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.search),
+            ),
+            onTap: () async {
+              // TODO: Load the search bar and execute the search action
+            },
+          ),
+          SizedBox(width: 8.0),
+        ],
       ),
       body: Stack(children: [
         ListView(
