@@ -240,7 +240,8 @@ Future<Node> addNode(
 
 // Add a nickname for a node
 Future<Nickname> addNickname(Database db, Node node, String nickname) async {
-  final int nicknameId = await db.insert('nicknames', {'name': nickname});
+  final int nicknameId = await db
+      .insert('nicknames', {'nickname': nickname, 'nodeId': node.nodeId});
   return Nickname(
     nicknameId,
     nickname,
@@ -344,6 +345,18 @@ Future<bool> deleteNode(Database db, Node node) async {
   // Delete node
   final int count =
       await db.delete('nodes', where: 'nodeId = ?', whereArgs: [node.nodeId]);
+  if (count != 1) {
+    errorAndRollback();
+    return false;
+  }
+
+  return true;
+}
+
+Future<bool> deleteParentRelation(Database db, Node parent, Node child) async {
+  final int count = await db.delete('nodes_nodes',
+      where: 'parentId = ? AND childId = ?',
+      whereArgs: [parent.nodeId, child.nodeId]);
   if (count != 1) {
     errorAndRollback();
     return false;

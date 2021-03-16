@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/models.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -63,23 +64,99 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(node.name),
+        actions: [
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.edit),
+            ),
+            onTap: _editNodeNameDialog,
+          ),
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.add),
+            ),
+            onTap: _addChildNodeDialog,
+          ),
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.delete),
+            ),
+            onTap: _deleteCurrentNodeDialog,
+          ),
+          SizedBox(width: 8.0),
+        ],
       ),
-      body: Column(
+      body: ListView(
         children: [
           _WrapListViewer(
+            parents.map((p) => _parentView(p)).toList(),
             title: 'Parents:',
-            items: parents.map((e) => e.name).toList(),
-            generator: (s) => _Parent(s),
+            addCallback: _addParentDialog,
           ),
           _WrapListViewer(
+            nicknames.map((n) => _nicknameView(n)).toList(),
             title: 'Alternate names:',
-            items: nicknames.map((e) => e.name).toList(),
-            generator: (s) => _Nickname(s),
+            addCallback: _addNicknameDialog,
           ),
           _categoryViewer(),
-          Text('Notes: '),
-          ...List<Widget>.generate(noteThreads.length,
-              (index) => _NoteThreadViewer(noteThreads[index])),
+          Center(
+            child: Text('Notes', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ...noteThreads
+              .map((noteThread) => _NoteThreadViewer(noteThread))
+              .toList(),
+        ],
+      ),
+    );
+  }
+
+  // Dialog box for adding a new child node
+  void _addChildNodeDialog() async {
+    // Get the ID of the created node
+    final newNodeName = await showTextEditDialog(context, title: 'New Node: ');
+
+    if (newNodeName != null) {
+      // Create the new node and navigate to it in the editor
+      Node newNode = await addNode(
+          widget.database,
+          node,
+          categories.firstWhere((cat) => cat.categoryId == node.nodeId),
+          newNodeName);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailsScreen(widget.database, newNode.nodeId),
+        ),
+      );
+    }
+  }
+
+  // Dialog box for deleting the node
+  void _deleteCurrentNodeDialog() async {
+    final deleted = await showConfirmationDialog(
+      context,
+      title: 'Deleting Node...',
+      message:
+          'Are you sure you want to delete the data entry on ${node.name} ?',
+      okButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      defaultValue: false,
+    );
+    // TODO : If node is successfully deleted, pop the navigation stack
+  }
+
+  // View a dialog to edit the name of the node
+  void _editNodeNameDialog() async {
+    final String newName = await showTextEditDialog(context);
+    if (newName != null) {
+      await editNodeName(widget.database, node, newName);
+      reloadState();
+    }
+  }
+
   Widget _categoryViewer() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
@@ -108,23 +185,124 @@ class _DetailsScreenState extends State<DetailsScreen> {
       ),
     );
   }
+
+  Widget _parentView(Node parent) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(width: 1.0),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(parent.name),
+          GestureDetector(
+            child: Icon(Icons.cancel),
+            onTap: () async {
+              // Delete parent from list if it has more than 2 parents
+              if (parents.length < 2) {
+                showMessageDialog(
+                  context,
+                  title: 'Error!',
+                  message: 'Cannot delete the last parent of a node',
+                  okButtonText: 'OK',
+                );
+              } else {
+                bool check = await showConfirmationDialog(
+                  context,
+                  message:
+                      'Are you sure you want to remove ${parent.name} as a parent of ${node.name} ?',
+                  title: 'Removing parent link...',
+                  okButtonText: 'Yes',
+                  cancelButtonText: 'No',
+                  defaultValue: false,
+                );
+                if (check) {
+                  deleteParentRelation(widget.database, parent, node);
+                  reloadState();
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _nicknameView(Nickname nickname) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            child: Text(nickname.name),
+            onTap: () async {
+              // Popup to edit nickname
+              String res = await showTextEditDialog(context,
+                  value: nickname.name,
+                  title: 'Edit Nickname:',
+                  hintText: 'New nickname...');
+              await editNickname(widget.database, nickname, res);
+              reloadState();
+            },
+          ),
+          InkWell(
+            child: Icon(Icons.cancel),
+            onTap: () async {
+              // Delete nickname from list
+              developer.log('Deleting nickname ${nickname.name}');
+              bool check = await showConfirmationDialog(context,
+                  title: 'Deleting nickname...',
+                  message:
+                      'Are you sure you want to delete the nickname \'${nickname.name}\'?');
+              if (check) {
+                await deleteNickname(widget.database, nickname);
+                reloadState();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addNicknameDialog() async {
+    // Dialog to add a new nickname to the node
+    String newNickname =
+        await showTextEditDialog(context, title: 'Add Nickname: ');
+    developer.log('Value returned from Nickname dialog: $newNickname',
+        name: 'screen_details._DetailsScreenState._addNicknameDialog()');
+    if (newNickname != null) {
+      await addNickname(widget.database, node, newNickname);
+      reloadState();
+    }
+  }
+
+  void _addParentDialog() async {
+    // Dialog to add a new parent to the node
+  }
 }
 
 class _WrapListViewer extends StatelessWidget {
-  // Todo: just accept the widgets directly, instead of asking for a separate generator
+  // Title of the WrapListViewer widget
   final String title;
-  final List<String> items;
-  final Widget Function(String) generator;
 
-  _WrapListViewer({this.title, this.items, this.generator});
+  // The widgets to show in the WrapList
+  final List<Widget> items;
 
-  List<Widget> _generateChildren() {
-    final children = <Widget>[];
-    for (final item in items) {
-      children.add(generator(item));
-    }
-    return children;
-  }
+  // The callback function to call when the + button is pressed
+  final Function() addCallback;
+
+  _WrapListViewer(this.items, {this.title, this.addCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -146,80 +324,12 @@ class _WrapListViewer extends StatelessWidget {
             direction: Axis.horizontal,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              ..._generateChildren(),
-              GestureDetector(
+              ...items,
+              InkWell(
                 child: Icon(Icons.add),
-                onTap: () {
-                  //TODO: Add callback for adding parent
-                },
+                onTap: addCallback,
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Parent extends StatelessWidget {
-  final String text;
-
-  _Parent(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(width: 1.0),
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(text),
-          GestureDetector(
-            child: Icon(Icons.cancel),
-            onTap: () {
-              //TODO: Delete parent from list
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Nickname extends StatelessWidget {
-  final String text;
-
-  _Nickname(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.green,
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            child: Text(text),
-            onTap: () {
-              //TODO: Popup to edit nickname
-            },
-          ),
-          GestureDetector(
-            child: Icon(Icons.cancel),
-            onTap: () {
-              //TODO: Delete nickname from list
-            },
           ),
         ],
       ),
