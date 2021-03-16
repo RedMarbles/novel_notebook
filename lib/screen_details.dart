@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/models.dart';
+import 'package:novelnotebook/screen_searchNode.dart';
 import 'package:sqflite/sqflite.dart';
 
 /* Screen where the individual details of each item are shown
@@ -289,6 +290,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _addParentDialog() async {
     // Dialog to add a new parent to the node
+    final Node newParent = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                SearchNodeScreen(widget.database, [node, ...parents])));
+    developer.log('Value returned from Nickname dialog: ${newParent?.name}',
+        name: 'screen_details._DetailsScreenState._addNicknameDialog()');
+    if (newParent != null) {
+      // Add the node as a parent
+      await addParent(widget.database, node, newParent);
+      reloadState();
+    }
   }
 }
 

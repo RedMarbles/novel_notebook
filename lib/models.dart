@@ -95,6 +95,30 @@ Future<Node> getNode(Database db, int nodeId) async {
   );
 }
 
+Future<List<Node>> queryNodes(Database db, String queryString) async {
+  developer.log('Running a query for the term \"$queryString\"',
+      name: 'models.queryNodes()');
+  final List<Map<String, dynamic>> result = await db.query(
+    'nodes',
+    columns: ['nodeId', 'name', 'categoryId'],
+    where: 'name LIKE ?',
+    whereArgs: ['%$queryString%'],
+  );
+
+  // TODO: Add a search for looking through the nicknames
+
+  developer.log('Found ${result.length} results matching query',
+      name: 'models.queryNodes()');
+
+  return result
+      .map((Map<String, dynamic> elem) => Node(
+            elem['nodeId'],
+            elem['name'],
+            elem['categoryId'],
+          ))
+      .toList(growable: false);
+}
+
 // Retrieve the list of nicknames attached to a specific node
 Future<List<Nickname>> getNicknames(Database db, int nodeId) async {
   developer.log('Attempting to fetch nicknames of node id $nodeId',
