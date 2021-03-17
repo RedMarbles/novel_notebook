@@ -94,7 +94,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
           _WrapListViewer(
             parents.map((p) => _parentView(p)).toList(),
             title: 'Parents:',
-            addCallback: _addParentDialog,
+            addCallback:
+                (node.nodeId == ROOT_NODE_ID) ? null : _addParentDialog,
           ),
           _WrapListViewer(
             nicknames.map((n) => _nicknameView(n)).toList(),
@@ -337,10 +338,12 @@ class _WrapListViewer extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               ...items,
-              InkWell(
-                child: Icon(Icons.add),
-                onTap: addCallback,
-              ),
+              (addCallback == null)
+                  ? SizedBox()
+                  : InkWell(
+                      child: Icon(Icons.add),
+                      onTap: addCallback,
+                    ),
             ],
           ),
         ],
