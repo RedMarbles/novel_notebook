@@ -5,6 +5,28 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+// TABLE metadata
+//   dataId    INTEGER PRIMARY KEY
+//   dataValue TEXT
+const CREATE_TABLE_METADATA = 'CREATE TABLE IF NOT EXISTS metadata ( '
+    'dataId INTEGER PRIMARY KEY, '
+    'dataValue TEXT '
+    ');';
+
+class MetaDataId {
+  static const int novelName = 1; // String
+  static const int lastChapter = 2; // Float
+  static const int authorName = 3; // String
+  static const int sourceType =
+      4; // String - one of Webnovel / LN / VN / Manga / Anime
+  static const int novelNameOrig =
+      5; // String - name of the novel in the original language
+  static const int novelNameTrans =
+      6; // String - name of the novel in english or the reader's language
+  static const int translatorName = 7; // String - name of the main translator
+  static const int rating = 8; // Float - rating given to the novel (out of 5?)
+}
+
 // TABLE categories
 //   categoryId INTEGER PRIMARY KEY
 //   catName    TEXT
@@ -131,13 +153,26 @@ Future<Database> initializeDatabases(String novelName) async {
 }
 
 Future<void> setupDatabaseV1(Database db) async {
-  // Create the 6 databases
+  // Create the 7 databases
+  await db.execute(CREATE_TABLE_METADATA);
   await db.execute(CREATE_TABLE_CATEGORIES);
   await db.execute(CREATE_TABLE_NODES);
   await db.execute(CREATE_TABLE_NODES_NODES);
   await db.execute(CREATE_TABLE_NICKNAMES);
   await db.execute(CREATE_TABLE_THREADS);
   await db.execute(CREATE_TABLE_NOTES);
+
+  // Add the default metadata
+  await db.execute('INSERT INTO metadata (dataId, dataValue) '
+      'VALUES '
+      '(${MetaDataId.novelName}, "unknown"), '
+      '(${MetaDataId.lastChapter}, "0.0"), '
+      '(${MetaDataId.authorName}, "unknown"), '
+      '(${MetaDataId.sourceType}, "unknown"), '
+      '(${MetaDataId.novelNameOrig}, "unknown"), '
+      '(${MetaDataId.novelNameTrans}, "unknown"), '
+      '(${MetaDataId.translatorName}, "unknown"), '
+      '(${MetaDataId.rating}, "0.0"); ');
 
   // Add the default categories
   await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
