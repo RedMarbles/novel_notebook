@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -7,11 +8,11 @@ import 'package:sqflite/sqflite.dart';
 // TABLE categories
 //   categoryId INTEGER PRIMARY KEY
 //   catName    TEXT
-//   catColor   TEXT
+//   catColor   INT
 const CREATE_TABLE_CATEGORIES = 'CREATE TABLE IF NOT EXISTS categories ( '
     'categoryId INTEGER PRIMARY KEY, '
     'catName TEXT, '
-    'catColor TEXT '
+    'catColor INT '
     ');';
 
 // TABLE nodes
@@ -141,13 +142,13 @@ Future<void> setupDatabaseV1(Database db) async {
   // Add the default categories
   await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
       'VALUES '
-      '(1, "World", "green"), '
-      '(2, "Person", "blue"), '
-      '(3, "Organization", "yellow"), '
-      '(4, "Family", "orange"), '
-      '(5, "Species", "magenta"), '
-      '(6, "Item", "pink"), '
-      '(7, "Skill", "red");');
+      '(1, "World", ${Colors.green.value}), '
+      '(2, "Person", ${Colors.blue.value}), '
+      '(3, "Organization", ${Colors.yellow.value}), '
+      '(4, "Family", ${Colors.orange.value}), '
+      '(5, "Species", ${Colors.purpleAccent.value}), '
+      '(6, "Item", ${Colors.pinkAccent.value}), '
+      '(7, "Skill", ${Colors.redAccent.value});');
 
   // Add the root node into the tree at position 1
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '

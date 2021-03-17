@@ -10,7 +10,7 @@ import 'package:sqflite/sqflite.dart';
 class Category {
   final int categoryId;
   final String catName; // Name of the category
-  final String catColor; // Color of the category
+  final int catColor; // Color of the category
 
   const Category(this.categoryId, this.catName, this.catColor);
 }
@@ -183,13 +183,12 @@ Future<List<Node>> getChildren(Database db, int nodeId) async {
 }
 
 // Add a new category
-Future<Category> addCategory(Database db, String catName, String color) async {
-  // TODO: Verify that 'color' is a valid color string
+Future<Category> addCategory(Database db, String catName, int colorVal) async {
   final int catId = await db.insert(
     'categories',
-    {'catName': catName, 'catColor': color},
+    {'catName': catName, 'catColor': colorVal},
   );
-  return Category(catId, catName, color);
+  return Category(catId, catName, colorVal);
 }
 
 // Get nodes belonging to a category
@@ -209,8 +208,7 @@ Future<List<Node>> getNodesOfCategory(Database db, Category cat) async {
 
 // Edit existing category
 Future<Category> editCategory(Database db, Category cat,
-    {String newName, String newColor}) async {
-  // TODO: Verify newColor is valid
+    {String newName, int newColor}) async {
   final values = {
     'catName': newName ?? cat.catName,
     'catColor': newColor ?? cat.catColor
