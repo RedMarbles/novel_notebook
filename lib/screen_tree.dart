@@ -45,6 +45,7 @@ class TreeScreen extends StatefulWidget {
 
 class _TreeScreenState extends State<TreeScreen> {
   _TreeNode root;
+  Map<int, models.Category> categories;
   int numLoadingNodes = 0;
 
   @override
@@ -52,10 +53,15 @@ class _TreeScreenState extends State<TreeScreen> {
     super.initState();
 
     // Default value of root
-    root = _TreeNode(
-        widget.database, models.Node(ROOT_NODE_ID, 'Loading...', 1),
+    root = _TreeNode(widget.database,
+        models.Node(ROOT_NODE_ID, 'Loading...', DEFAULT_CATEGORY_ID),
         expand: true);
     root.children = [];
+
+    categories = {
+      DEFAULT_CATEGORY_ID:
+          models.Category(DEFAULT_CATEGORY_ID, "Loading...", Colors.white.value)
+    };
 
     // Async task to load the actual tree from the database
     reloadTree();
@@ -75,6 +81,15 @@ class _TreeScreenState extends State<TreeScreen> {
             ),
             onTap: () async {
               // TODO: Load the search bar and execute the search action
+            },
+          ),
+          InkWell(
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.group),
+            ),
+            onTap: () async {
+              // TODO: Switch to screen to add, edit and delete categories and edit their colors
             },
           ),
           SizedBox(width: 8.0),
@@ -119,6 +134,7 @@ class _TreeScreenState extends State<TreeScreen> {
   Future<void> reloadTree() async {
     developer.log('Reloading database tree...',
         name: 'screen_tree.TreeScreen.reloadTree()');
+    await reloadCategories();
     final stack = <_TreeNodePair>[];
     final _TreeNode rootCopy = _TreeNode(widget.database,
         await models.getNode(widget.database, root.node.nodeId),
@@ -159,6 +175,22 @@ class _TreeScreenState extends State<TreeScreen> {
         name: 'screen_tree.TreeScreen.reloadTree()');
   }
 
+  Future<void> reloadCategories() async {
+    setLoadingState();
+
+    final categoriesList = await models.getCategories(widget.database);
+    final categoriesMap = Map<int, models.Category>();
+    categoriesList.forEach((cat) {
+      categoriesMap[cat.categoryId] = cat;
+    });
+
+    setState(() {
+      categories = categoriesMap;
+    });
+
+    unsetLoadingState();
+  }
+
   // Constructs each row element of the ListView, spaced away from the edge by the nest level
   Widget _rowElement(_TreeNode treeNode, int nestLevel) {
     return Container(
@@ -193,6 +225,13 @@ class _TreeScreenState extends State<TreeScreen> {
               child: Container(
                   width: double.infinity,
                   height: 32.0,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8)),
+                    color: Color(categories[treeNode.node.categoryId].catColor),
+                  ),
                   alignment: Alignment.centerLeft,
                   child: Text(treeNode.node.name)),
               onTap: () {

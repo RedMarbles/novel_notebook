@@ -27,6 +27,8 @@ class MetaDataId {
   static const int rating = 8; // Float - rating given to the novel (out of 5?)
 }
 
+const int DEFAULT_CATEGORY_ID = 1;
+
 // TABLE categories
 //   categoryId INTEGER PRIMARY KEY
 //   catName    TEXT
@@ -37,7 +39,7 @@ const CREATE_TABLE_CATEGORIES = 'CREATE TABLE IF NOT EXISTS categories ( '
     'catColor INT '
     ');';
 
-const ROOT_NODE_ID = 1;
+const int ROOT_NODE_ID = 1;
 
 // TABLE nodes
 //   nodeId     INTEGER PRIMARY KEY
@@ -179,13 +181,14 @@ Future<void> setupDatabaseV1(Database db) async {
   // Add the default categories
   await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
       'VALUES '
-      '(1, "World", ${Colors.green.value}), '
-      '(2, "Person", ${Colors.blue.value}), '
-      '(3, "Organization", ${Colors.yellow.value}), '
-      '(4, "Family", ${Colors.orange.value}), '
-      '(5, "Species", ${Colors.purpleAccent.value}), '
-      '(6, "Item", ${Colors.pinkAccent.value}), '
-      '(7, "Skill", ${Colors.redAccent.value});');
+      '(1, "Default", ${Colors.white.value}), '
+      '(2, "World", ${Colors.green.value}), '
+      '(3, "Person", ${Colors.blue.value}), '
+      '(4, "Organization", ${Colors.yellow.value}), '
+      '(5, "Family", ${Colors.orange.value}), '
+      '(6, "Species", ${Colors.purpleAccent.value}), '
+      '(7, "Item", ${Colors.pinkAccent.value}), '
+      '(8, "Skill", ${Colors.redAccent.value});');
 
   // Add the root node into the tree at position 1
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
@@ -197,9 +200,9 @@ Future<void> setupSampleDataV1(Database db) async {
   // Insert sample data
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
       'VALUES '
-      '(2, "Hero", 2), '
-      '(3, "Villain", 2), '
-      '(4, "Excalibur", 6);');
+      '(2, "Hero", 3), '
+      '(3, "Villain", 3), '
+      '(4, "Excalibur", 7);');
   await db.execute('INSERT INTO nodes_nodes (parentId, childId, sequence) '
       'VALUES '
       '(1, 2, 1), ' // Hero under Root at pos 1
