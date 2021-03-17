@@ -93,28 +93,6 @@ class _TreeScreenState extends State<TreeScreen> {
     );
   }
 
-  Widget _nodeElement(Node node) {
-    return GestureDetector(
-      // Replace this with the tree structure selector
-      child: Container(
-        color: Colors.white,
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        child: Text(node.name),
-      ),
-      onTap: () async {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetailsScreen(widget.database, node.nodeId),
-            )).then((_) {
-          // Reload the tree after navigating back to the tree screen
-          reloadTree();
-        });
-      },
-    );
-  }
-
   // Enable the loading progress bar
   void setLoadingState() {
     // Only trigger the rebuild if we're switching from 0 to 1 loading nodes
