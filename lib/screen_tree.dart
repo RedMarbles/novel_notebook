@@ -7,16 +7,15 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
-import 'package:novelnotebook/models.dart';
+import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_details.dart';
+import 'package:novelnotebook/database.dart';
 import 'package:sqflite/sqflite.dart';
-
-const _ROOT_NODE_ID = 1;
 
 class _TreeNode {
   final Database db;
   bool expand;
-  Node node;
+  models.Node node;
   List<_TreeNode> children; // if null, then it's uninitialized
 
   _TreeNode(this.db, this.node, {this.expand = false}) {}
@@ -26,7 +25,7 @@ class _TreeNode {
     if (db == null || widget == null) return;
 
     widget.setLoadingState();
-    final childNodes = await getChildren(db, node.nodeId);
+    final childNodes = await models.getChildren(db, node.nodeId);
     children = List<_TreeNode>.generate(
       childNodes.length,
       (index) => _TreeNode(db, childNodes[index], expand: false),
@@ -53,7 +52,8 @@ class _TreeScreenState extends State<TreeScreen> {
     super.initState();
 
     // Default value of root
-    root = _TreeNode(widget.database, Node(_ROOT_NODE_ID, 'Loading...', 1),
+    root = _TreeNode(
+        widget.database, models.Node(ROOT_NODE_ID, 'Loading...', 1),
         expand: true);
     root.children = [];
 
@@ -142,8 +142,8 @@ class _TreeScreenState extends State<TreeScreen> {
     developer.log('Reloading database tree...',
         name: 'screen_tree.TreeScreen.reloadTree()');
     final stack = <_TreeNodePair>[];
-    final _TreeNode rootCopy = _TreeNode(
-        widget.database, await getNode(widget.database, root.node.nodeId),
+    final _TreeNode rootCopy = _TreeNode(widget.database,
+        await models.getNode(widget.database, root.node.nodeId),
         expand: root.expand);
     stack.add(_TreeNodePair(root, rootCopy));
 
@@ -160,7 +160,7 @@ class _TreeScreenState extends State<TreeScreen> {
       copyTreeNode.children = <_TreeNode>[];
 
       final copyChildNodes =
-          await getChildren(widget.database, copyTreeNode.node.nodeId);
+          await models.getChildren(widget.database, copyTreeNode.node.nodeId);
       copyChildNodes.forEach((copyChild) {
         // Finds a matching node among the original's children, else is null
         final origChildTreeNode = origTreeNode.children.firstWhere(

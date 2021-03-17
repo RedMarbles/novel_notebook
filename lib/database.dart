@@ -37,6 +37,8 @@ const CREATE_TABLE_CATEGORIES = 'CREATE TABLE IF NOT EXISTS categories ( '
     'catColor INT '
     ');';
 
+const ROOT_NODE_ID = 1;
+
 // TABLE nodes
 //   nodeId     INTEGER PRIMARY KEY
 //   categoryId INTEGER FOREIGN KEY

@@ -1,8 +1,9 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/dialog_utils.dart';
-import 'package:novelnotebook/models.dart';
+import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_searchNode.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -24,11 +25,11 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  Node node = Node(0, "Loading...", 0);
-  List<Node> parents = [];
-  List<Nickname> nicknames = [];
-  List<NoteThread> noteThreads = [];
-  List<Category> categories = [];
+  models.Node node = models.Node(0, "Loading...", 0);
+  List<models.Node> parents = [];
+  List<models.Nickname> nicknames = [];
+  List<models.NoteThread> noteThreads = [];
+  List<models.Category> categories = [];
 
   @override
   void initState() {
@@ -39,13 +40,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void reloadState() {
     Future.wait([
-      getNode(widget.database, widget.nodeId).whenComplete(() => developer.log(
-          'getNodeComplete',
-          name: 'screen_details._DetailsScreenState.initState()')),
-      getParents(widget.database, widget.nodeId),
-      getNicknames(widget.database, widget.nodeId),
-      getThreadsInNode(widget.database, widget.nodeId),
-      getCategories(widget.database),
+      models.getNode(widget.database, widget.nodeId),
+      models.getParents(widget.database, widget.nodeId),
+      models.getNicknames(widget.database, widget.nodeId),
+      models.getThreadsInNode(widget.database, widget.nodeId),
+      models.getCategories(widget.database),
     ]).then((futures) {
       setState(() {
         node = futures[0];
@@ -53,10 +52,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
         nicknames = futures[2];
         noteThreads = futures[3];
         categories = futures[4];
-        developer.log(
-            "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
-            name: 'screen_details._DetailsScreenState.initState()');
       });
+      developer.log(
+          "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
+          name: 'screen_details._DetailsScreenState.initState()');
     });
   }
 
@@ -121,7 +120,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
     if (newNodeName != null) {
       // Create the new node and navigate to it in the editor
-      Node newNode = await addNode(
+      models.Node newNode = await models.addNode(
           widget.database,
           node,
           categories.firstWhere((cat) => cat.categoryId == node.nodeId),
@@ -153,7 +152,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void _editNodeNameDialog() async {
     final String newName = await showTextEditDialog(context);
     if (newName != null) {
-      await editNodeName(widget.database, node, newName);
+      await models.editNodeName(widget.database, node, newName);
       reloadState();
     }
   }
@@ -174,7 +173,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ))
                 .toList(),
             onChanged: (catId) async {
-              await editNodeCategory(
+              await models.editNodeCategory(
                 widget.database,
                 node,
                 categories.firstWhere((element) => element.categoryId == catId),
@@ -187,7 +186,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
-  Widget _parentView(Node parent) {
+  Widget _parentView(models.Node parent) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -222,7 +221,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   defaultValue: false,
                 );
                 if (check) {
-                  deleteParentRelation(widget.database, parent, node);
+                  models.deleteParentRelation(widget.database, parent, node);
                   reloadState();
                 }
               }
@@ -233,7 +232,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
-  Widget _nicknameView(Nickname nickname) {
+  Widget _nicknameView(models.Nickname nickname) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.green,
@@ -252,7 +251,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   value: nickname.name,
                   title: 'Edit Nickname:',
                   hintText: 'New nickname...');
-              await editNickname(widget.database, nickname, res);
+              await models.editNickname(widget.database, nickname, res);
               reloadState();
             },
           ),
@@ -266,7 +265,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   message:
                       'Are you sure you want to delete the nickname \'${nickname.name}\'?');
               if (check) {
-                await deleteNickname(widget.database, nickname);
+                await models.deleteNickname(widget.database, nickname);
                 reloadState();
               }
             },
@@ -283,14 +282,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
     developer.log('Value returned from Nickname dialog: $newNickname',
         name: 'screen_details._DetailsScreenState._addNicknameDialog()');
     if (newNickname != null) {
-      await addNickname(widget.database, node, newNickname);
+      await models.addNickname(widget.database, node, newNickname);
       reloadState();
     }
   }
 
   void _addParentDialog() async {
     // Dialog to add a new parent to the node
-    final Node newParent = await Navigator.push(
+    final models.Node newParent = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
@@ -299,7 +298,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         name: 'screen_details._DetailsScreenState._addNicknameDialog()');
     if (newParent != null) {
       // Add the node as a parent
-      await addParent(widget.database, node, newParent);
+      await models.addParent(widget.database, node, newParent);
       reloadState();
     }
   }
@@ -351,7 +350,7 @@ class _WrapListViewer extends StatelessWidget {
 }
 
 class _NoteThreadViewer extends StatelessWidget {
-  final NoteThread noteThread;
+  final models.NoteThread noteThread;
 
   _NoteThreadViewer(this.noteThread);
 
@@ -377,7 +376,7 @@ class _NoteThreadViewer extends StatelessWidget {
 }
 
 class _NoteViewer extends StatelessWidget {
-  final Note note;
+  final models.Note note;
 
   _NoteViewer(this.note);
 
