@@ -29,7 +29,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   List<models.Node> parents = [];
   List<models.Nickname> nicknames = [];
   List<models.NoteThread> noteThreads = [];
-  List<models.Category> categories = [];
+  Map<int, models.Category> categories = {};
 
   @override
   void initState() {
@@ -122,10 +122,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     if (newNodeName != null) {
       // Create the new node and navigate to it in the editor
       models.Node newNode = await models.addNode(
-          widget.database,
-          node,
-          categories.firstWhere((cat) => cat.categoryId == node.nodeId),
-          newNodeName);
+          widget.database, node, categories[node.categoryId], newNodeName);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -167,22 +164,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
           SizedBox(width: 8.0),
           DropdownButton(
             value: node.categoryId,
-            items: categories
-                .map((cat) => DropdownMenuItem(
-                      value: cat.categoryId,
-                      child: Container(
-                        color: Color(cat.catColor),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        child: Text(cat.catName),
-                      ),
-                    ))
+            items: categories.keys
+                .map((catId) => DropdownMenuItem(
+                    value: catId,
+                    child: Container(
+                      color: Color(categories[catId].catColor),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Text(categories[catId].catName),
+                    )))
                 .toList(),
             onChanged: (catId) async {
               await models.editNodeCategory(
                 widget.database,
                 node,
-                categories.firstWhere((element) => element.categoryId == catId),
+                categories[catId],
               );
               reloadState();
             },

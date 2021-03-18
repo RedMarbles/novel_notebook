@@ -53,7 +53,7 @@ Future<bool> errorAndRollback() async {
 }
 
 // Retrieve the list of all categories
-Future<List<Category>> getCategories(Database db) async {
+Future<Map<int, Category>> getCategories(Database db) async {
   developer.log('Attempting to fetch information about categories',
       name: 'models.getCategories()');
   final List<Map<String, dynamic>> result =
@@ -66,13 +66,16 @@ Future<List<Category>> getCategories(Database db) async {
       'Fetched information about ${result.length} categories in the database',
       name: 'models.getCategories()');
 
-  return List<Category>.generate(
-      result.length,
-      (int index) => Category(
-            result[index]['categoryId'],
-            result[index]['catName'],
-            result[index]['catColor'],
-          ));
+  final categoriesMap = Map<int, Category>();
+  result.forEach((Map<String, dynamic> element) {
+    categoriesMap[element['categoryId']] = Category(
+      element['categoryId'],
+      element['catName'],
+      element['catColor'],
+    );
+  });
+
+  return categoriesMap;
 }
 
 // Retrieve a specific node from the 'nodes' table

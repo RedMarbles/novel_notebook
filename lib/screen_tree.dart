@@ -178,14 +178,10 @@ class _TreeScreenState extends State<TreeScreen> {
   Future<void> reloadCategories() async {
     setLoadingState();
 
-    final categoriesList = await models.getCategories(widget.database);
-    final categoriesMap = Map<int, models.Category>();
-    categoriesList.forEach((cat) {
-      categoriesMap[cat.categoryId] = cat;
-    });
+    final temp = await models.getCategories(widget.database);
 
     setState(() {
-      categories = categoriesMap;
+      categories = temp;
     });
 
     unsetLoadingState();
