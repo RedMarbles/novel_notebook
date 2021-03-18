@@ -170,7 +170,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
             items: categories
                 .map((cat) => DropdownMenuItem(
                       value: cat.categoryId,
-                      child: Text(cat.catName),
+                      child: Container(
+                        color: Color(cat.catColor),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: Text(cat.catName),
+                      ),
                     ))
                 .toList(),
             onChanged: (catId) async {
