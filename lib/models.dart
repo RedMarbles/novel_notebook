@@ -512,6 +512,35 @@ Future<NoteThread> addThreadToNode(
   return thread;
 }
 
+Future<NoteThread> editNoteThread(Database db, NoteThread noteThread,
+    {String newDescription, int newSequence}) async {
+  developer.log(
+      'Attempting to edit note thread #${noteThread.threadId}\'s description to "$newDescription" and sequence number to "$newSequence"',
+      name: 'models.editNoteThread()');
+  // TODO : Verify and allow changes in sequence number
+  final values = {
+    'description': newDescription ?? noteThread.description,
+    'sequence': newSequence ?? noteThread.sequence
+  };
+
+  final int count = await db.update('threads', values,
+      where: 'threadId = ?', whereArgs: [noteThread.threadId]);
+  if (count > 1) {
+    errorAndRollback();
+    return noteThread;
+  }
+
+  developer.log('Successfully edited note thread description and/or sequence',
+      name: 'models.editNoteThread()');
+  return NoteThread(
+    noteThread.threadId,
+    notes: noteThread.notes,
+    description: values['description'],
+    nodeId: noteThread.nodeId,
+    sequence: values['sequence'],
+  );
+}
+
 // Edit an existing message
 Future<Note> editNote(Database db, Note note,
     {String newMessage, double chapter}) async {

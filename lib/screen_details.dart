@@ -307,8 +307,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final result = <Widget>[];
     result.add(_addThreadButton(1));
     for (int idx = 0; idx < noteThreads.length; ++idx) {
-      result.add(_NoteThreadViewer(noteThreads[idx], _addNoteButton,
-          _editNoteCallback, _deleteNoteCallback));
+      result.add(_NoteThreadViewer(
+          noteThreads[idx],
+          _editThreadCallback,
+          _deleteThreadCallback,
+          _addNoteButton,
+          _editNoteCallback,
+          _deleteNoteCallback));
       result.add(_addThreadButton(idx + 2));
     }
     return result;
@@ -421,6 +426,28 @@ class _DetailsScreenState extends State<DetailsScreen> {
       reloadState();
     }
   }
+
+  void _editThreadCallback(models.NoteThread noteThread) async {
+    final String newDescription = await showTextEditDialog(context,
+        value: noteThread.description,
+        title: 'Edit Note Thread title...',
+        hintText: 'Note Thread title');
+    if (newDescription != null) {
+      await models.editNoteThread(widget.database, noteThread,
+          newDescription: newDescription);
+      reloadState();
+    }
+  }
+
+  void _deleteThreadCallback(models.NoteThread noteThread) async {
+    final bool check = await showConfirmationDialog(context,
+        message:
+            'Are you sure you want to delete this note thread "${noteThread.description}" ?');
+    if (check) {
+      await models.deleteNoteThread(widget.database, noteThread);
+      reloadState();
+    }
+  }
 }
 
 class _WrapListViewer extends StatelessWidget {
@@ -472,11 +499,18 @@ class _WrapListViewer extends StatelessWidget {
 
 class _NoteThreadViewer extends StatelessWidget {
   final models.NoteThread noteThread;
+  final Function(models.NoteThread) editNoteThreadDescriptionCallback;
+  final Function(models.NoteThread) deleteNoteThreadCallback;
   final Function(models.NoteThread) addNoteButton;
   final Function(models.Note) editNoteCallback;
   final Function(models.Note) deleteNoteCallback;
 
-  _NoteThreadViewer(this.noteThread, this.addNoteButton, this.editNoteCallback,
+  _NoteThreadViewer(
+      this.noteThread,
+      this.editNoteThreadDescriptionCallback,
+      this.deleteNoteThreadCallback,
+      this.addNoteButton,
+      this.editNoteCallback,
       this.deleteNoteCallback);
 
   @override
@@ -495,7 +529,22 @@ class _NoteThreadViewer extends StatelessWidget {
   List<Widget> get _noteThreadChildren {
     final result = <Widget>[
       Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
-      Text(noteThread.description),
+      GestureDetector(
+        child: Container(
+          color: Colors.yellow.shade600,
+          width: double.infinity,
+          alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+          child: Text(noteThread.description,
+              style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        onTap: () {
+          editNoteThreadDescriptionCallback(noteThread);
+        },
+        onLongPress: () {
+          deleteNoteThreadCallback(noteThread);
+        },
+      ),
       addNoteButton(noteThread),
     ];
     noteThread.notes.reversed.forEach((note) {
