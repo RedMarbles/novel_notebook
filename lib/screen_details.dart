@@ -341,9 +341,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ],
           ),
         ),
-        onTap: () {
-          // TODO : Shift all the note threads of the same or lower sequence number than idxForNewThread down
-          // TODO : Add the new note thread with the new sequence number
+        onTap: () async {
+          final String description = await showTextEditDialog(context,
+              title: 'Create Note Thread...', hintText: 'Thread description');
+          if (description != null) {
+            await models.addThreadToNode(widget.database, node,
+                threads: noteThreads,
+                sequence: idxForNewThread,
+                description: description);
+            reloadState();
+          }
         },
       ),
     );

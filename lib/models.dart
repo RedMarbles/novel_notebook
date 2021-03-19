@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:math';
 import 'package:flutter/widgets.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -412,10 +413,7 @@ Future<List<Note>> getNotesInThread(Database db, int threadId) async {
   developer.log(
       'Successfully retrieved ${result.length} fetch notes in thread id $threadId',
       name: 'models.getNoteThread()');
-  if (result.length < 1) {
-    // TODO: Delete the empty thread
-    return null;
-  }
+
   // TODO: Verify that all the threads are in sequence and no sequence numbers are missing
 
   return List<Note>.generate(
@@ -471,14 +469,35 @@ Future<Note> addNoteToThread(
 // Add a new message thread to an existing node
 Future<NoteThread> addThreadToNode(
   Database db,
-  Node node,
-  double chapterNum, {
+  Node node, {
   String description = "", // A short description or title of the thread
-  String message = "", // Message to put in the first note of the thread
-  int sequence = 9999, // Sequence number, 1 is at the top
-  List<NoteThread> threads, // Existing threads of the target node
+  int sequence = 999999, // Sequence number, 1 is at the top
+  @required List<NoteThread> threads, // Existing threads of the target node
 }) async {
-  // TODO: verify the sequence number, rearrange other threads' sequence numbers if necessary
+  // Verify the sequence number, rearrange other threads' sequence numbers if necessary
+  if (sequence < 1) sequence = 1;
+  final int maxSequenceNumber =
+      threads.fold(1, (prevValue, thread) => max(prevValue, thread.sequence));
+  if (sequence > maxSequenceNumber)
+    sequence = maxSequenceNumber + 1;
+  else {
+    // Shift the sequence number of threads with a higher sequence number
+    threads.forEach((NoteThread thread) async {
+      if (thread.sequence >= sequence) {
+        // Shift the sequence number of the thread by 1
+        final int count = await db.update(
+            'threads', {'sequence': thread.sequence + 1},
+            where: 'threadId = ?', whereArgs: [thread.threadId]);
+        if (count != 1) {
+          developer.log(
+              'Error in shifting sequence of thread ${thread.threadId} by 1. Made $count updates instead.',
+              name: 'models.addThreadToNode()');
+        }
+      }
+    });
+  }
+
+  // Insert the new thread into the database
   final int threadId = await db.insert(
     'threads',
     {'nodeId': node.nodeId, 'description': description, 'sequence': sequence},
@@ -490,12 +509,6 @@ Future<NoteThread> addThreadToNode(
     sequence: sequence,
     notes: [],
   );
-  thread.notes.add(await addNoteToThread(
-    db,
-    thread,
-    chapterNum,
-    message: 'Empty Note',
-  ));
   return thread;
 }
 
