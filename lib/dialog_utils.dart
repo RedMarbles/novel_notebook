@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:novelnotebook/models.dart' as models;
 
 // Dialog to accept a string as input from the user
 Future<String> showTextEditDialog(BuildContext context,
@@ -87,4 +88,77 @@ Future<void> showMessageDialog(
       ],
     ),
   );
+}
+
+Future<models.Note> showNoteEditDialog(
+  BuildContext context, {
+  models.Note note,
+  @required String title,
+  String okButtonText = 'OK',
+  String cancelButtonText = 'Cancel',
+}) async {
+  final double chapterNum = note?.chapter ?? 1;
+  final String message = note?.message ?? '';
+
+  final cnController = TextEditingController(text: chapterNum.toString());
+  final msgController = TextEditingController(text: message);
+
+  final resultNote = await showDialog<models.Note>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text(title),
+      content: Column(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text('Chapter: '),
+              Expanded(
+                child: TextField(
+                  controller: cnController,
+                  keyboardType: TextInputType.numberWithOptions(
+                      signed: false, decimal: true),
+                  decoration: InputDecoration(border: OutlineInputBorder()),
+                ),
+              )
+            ],
+          ),
+          SizedBox(height: 8),
+          Align(alignment: Alignment.centerLeft, child: Text('Note: ')),
+          Expanded(
+            child: TextField(
+              controller: msgController,
+              decoration: InputDecoration(
+                  hintText: 'Note', border: OutlineInputBorder()),
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+            ),
+          )
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: Text(cancelButtonText),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        TextButton(
+          child: Text(okButtonText),
+          onPressed: () {
+            Navigator.pop(
+                context,
+                models.Note(
+                  note?.noteId ?? -1,
+                  msgController.text,
+                  double.parse(
+                      cnController.text), // TODO: Handle validation of number
+                ));
+          },
+        ),
+      ],
+    ),
+  );
+
+  return resultNote;
 }

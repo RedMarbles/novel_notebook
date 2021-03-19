@@ -89,12 +89,14 @@ const CREATE_TABLE_NICKNAMES = 'CREATE TABLE IF NOT EXISTS nicknames ( '
     '); ';
 
 // TABLE threads
-//   threadId INTEGER PRIMARY KEY
-//   nodeId   INTEGER FOREIGN KEY  // link to nodes
-//   sequence INTEGER   // ordering of message thread among all threads
+//   threadId    INTEGER PRIMARY KEY
+//   nodeId      INTEGER FOREIGN KEY  // link to nodes
+//   description STRING    // Description of the contents of the thread
+//   sequence    INTEGER   // ordering of message thread among all threads
 const CREATE_TABLE_THREADS = 'CREATE TABLE IF NOT EXISTS threads ( '
     'threadId INTEGER PRIMARY KEY, '
     'nodeId INTEGER, '
+    'description STRING, '
     'sequence INTEGER, '
     'FOREIGN KEY (nodeId) '
     '  REFERENCES nodes (nodeId) '
@@ -215,11 +217,12 @@ Future<void> setupSampleDataV1(Database db) async {
       '(2, "Link"), '
       '(4, "Holy Sword"), '
       '(3, "Maou");');
-  await db.execute('INSERT INTO threads (threadId, nodeId, sequence)'
-      'VALUES '
-      '(1, 1, 1), ' // Thread in root node
-      '(2, 4, 1), ' // Thread 1 in excalibur node
-      '(3, 4, 2);'); // Thread 2 in excalibur node
+  await db
+      .execute('INSERT INTO threads (threadId, nodeId, sequence, description)'
+          'VALUES '
+          '(1, 1, 1, "World"), ' // Thread in root node
+          '(2, 4, 1, "Existence"), ' // Thread 1 in excalibur node
+          '(3, 4, 2, "Construction");'); // Thread 2 in excalibur node
   await db.execute('INSERT INTO notes (threadId, message, chapter)'
       'VALUES '
       '(1, "summary of the world", 1), '

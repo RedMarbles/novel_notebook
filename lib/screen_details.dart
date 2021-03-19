@@ -106,9 +106,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           Center(
             child: Text('Notes', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          ...noteThreads
-              .map((noteThread) => _NoteThreadViewer(noteThread))
-              .toList(),
+          ..._noteThreadList(),
         ],
       ),
     );
@@ -304,6 +302,118 @@ class _DetailsScreenState extends State<DetailsScreen> {
       reloadState();
     }
   }
+
+  List<Widget> _noteThreadList() {
+    final result = <Widget>[];
+    result.add(_addThreadButton(1));
+    for (int idx = 0; idx < noteThreads.length; ++idx) {
+      result.add(_NoteThreadViewer(noteThreads[idx], _addNoteButton,
+          _editNoteCallback, _deleteNoteCallback));
+      result.add(_addThreadButton(idx + 2));
+    }
+    return result;
+  }
+
+  // Button to add a new widget
+  Widget _addThreadButton(int idxForNewThread) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: InkWell(
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+          margin: EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
+          decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.all(
+                Radius.circular(8.0),
+              )),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add, color: Colors.white),
+//            SizedBox(width: 8.0),
+              Text('Add note thread',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  )),
+              SizedBox(width: 4.0)
+            ],
+          ),
+        ),
+        onTap: () {
+          // TODO : Shift all the note threads of the same or lower sequence number than idxForNewThread down
+          // TODO : Add the new note thread with the new sequence number
+        },
+      ),
+    );
+  }
+
+  Widget _addNoteButton(models.NoteThread noteThread) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: InkWell(
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+          margin: EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4.0),
+            border: Border.all(),
+          ),
+          child: Text('Add Note'),
+        ),
+        onTap: () async {
+          // TODO: Suggest the chapter number from the metadata
+          final models.Note note = await showNoteEditDialog(
+            context,
+            title: 'Create new note',
+            okButtonText: 'Create',
+            cancelButtonText: 'Cancel',
+          );
+
+          if (note != null) {
+            await models.addNoteToThread(
+                widget.database, noteThread, note.chapter,
+                message: note.message);
+            reloadState();
+          }
+        },
+      ),
+    );
+  }
+
+  void _editNoteCallback(models.Note note) async {
+    developer.log(
+        'Starting EditNoteDialog for note ${note.noteId} with original message "${note.message}" and chapter number ${note.chapter}',
+        name: 'screen_details._editNoteCallback()');
+    final models.Note newNote = await showNoteEditDialog(
+      context,
+      title: 'Edit note',
+      note: note,
+      okButtonText: 'Save edits',
+      cancelButtonText: 'Cancel',
+    );
+
+    if (newNote != null) {
+      await models.editNote(
+        widget.database,
+        note,
+        newMessage: newNote.message,
+        chapter: newNote.chapter,
+      );
+      reloadState();
+    }
+  }
+
+  void _deleteNoteCallback(models.Note note) async {
+    final bool check = await showConfirmationDialog(context,
+        message:
+            'Are you sure you want to delete this note for chapter ${note.chapter} ?');
+    if (check) {
+      await models.deleteNote(widget.database, note);
+      reloadState();
+    }
+  }
 }
 
 class _WrapListViewer extends StatelessWidget {
@@ -355,8 +465,12 @@ class _WrapListViewer extends StatelessWidget {
 
 class _NoteThreadViewer extends StatelessWidget {
   final models.NoteThread noteThread;
+  final Function(models.NoteThread) addNoteButton;
+  final Function(models.Note) editNoteCallback;
+  final Function(models.Note) deleteNoteCallback;
 
-  _NoteThreadViewer(this.noteThread);
+  _NoteThreadViewer(this.noteThread, this.addNoteButton, this.editNoteCallback,
+      this.deleteNoteCallback);
 
   @override
   Widget build(BuildContext context) {
@@ -366,35 +480,69 @@ class _NoteThreadViewer extends StatelessWidget {
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
-          Text('thread'), // TODO: Remove this placeholder
-          ...List<Widget>.generate(
-              noteThread.notes.length,
-              (index) => _NoteViewer(
-                  noteThread.notes[noteThread.notes.length - index - 1])),
-        ],
+        children: _noteThreadChildren,
       ),
     );
+  }
+
+  List<Widget> get _noteThreadChildren {
+    final result = <Widget>[
+      Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
+      Text(noteThread.description),
+      addNoteButton(noteThread),
+    ];
+    noteThread.notes.reversed.forEach((note) {
+      result.add(_NoteViewer(note, editNoteCallback, deleteNoteCallback));
+      result.add(Divider(height: 0, thickness: 1, color: Colors.grey.shade800));
+    });
+
+    return result;
   }
 }
 
 class _NoteViewer extends StatelessWidget {
   final models.Note note;
+  final Function(models.Note) editNoteCallback;
+  final Function(models.Note) deleteNoteCallback;
 
-  _NoteViewer(this.note);
+  _NoteViewer(this.note, this.editNoteCallback, this.deleteNoteCallback);
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Chapter ${note.chapter}',
-          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+        Expanded(
+          child: GestureDetector(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Chapter ${note.chapter}',
+                    style: TextStyle(
+                        color: Colors.grey, fontWeight: FontWeight.bold),
+                  ),
+                  Text(note.message),
+                ],
+              ),
+            ),
+            onTap: () {
+              editNoteCallback(note);
+            },
+          ),
         ),
-        Text(note.message),
-        Divider(height: 8, thickness: 1, color: Colors.grey.shade800),
+        GestureDetector(
+          child: Icon(
+            Icons.delete,
+            color: Colors.grey,
+          ),
+          onTap: () {
+            deleteNoteCallback(note);
+          },
+        )
       ],
     );
   }

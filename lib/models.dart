@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'package:flutter/widgets.dart';
 import 'package:sqflite/sqflite.dart';
 
 // TODO: Add logging for every function here
@@ -33,9 +34,16 @@ class Nickname {
 // An entire thread of messages
 class NoteThread {
   final int threadId; // Unique identifier
+  final int nodeId; // Id of the node to which this belongs  (might be null)
+  final String description; // Description/title of the thread
+  final int sequence; // Which order in the sequence of threads this belongs to
   final List<Note> notes; // List of messages tied to this thread
 
-  const NoteThread(this.threadId, this.notes);
+  const NoteThread(this.threadId,
+      {@required this.notes,
+      this.description = '',
+      this.nodeId,
+      this.sequence});
 }
 
 // A single message of a thread
@@ -391,7 +399,7 @@ Future<bool> deleteParentRelation(Database db, Node parent, Node child) async {
 }
 
 // Fetch a thread of messages
-Future<NoteThread> getNoteThread(Database db, int threadId) async {
+Future<List<Note>> getNotesInThread(Database db, int threadId) async {
   developer.log('Attempting to fetch notes in thread id $threadId',
       name: 'models.getNoteThread()');
   final List<Map<String, dynamic>> result = await db.query(
@@ -410,16 +418,13 @@ Future<NoteThread> getNoteThread(Database db, int threadId) async {
   }
   // TODO: Verify that all the threads are in sequence and no sequence numbers are missing
 
-  return NoteThread(
-    threadId,
-    List<Note>.generate(
-        result.length,
-        (index) => Note(
-              result[index]['nodeId'],
-              result[index]['message'],
-              result[index]['chapter'],
-            )),
-  );
+  return List<Note>.generate(
+      result.length,
+      (index) => Note(
+            result[index]['noteId'],
+            result[index]['message'],
+            result[index]['chapter'],
+          ));
 }
 
 // Fetch message threads of node
@@ -427,13 +432,19 @@ Future<List<NoteThread>> getThreadsInNode(Database db, int nodeId) async {
   developer.log('Attempting to fetch threads in node id $nodeId',
       name: 'models.getThreadsInNode()');
   final List<Map<String, dynamic>> result = await db.query('threads',
-      columns: ['threadId', 'sequence'],
+      columns: ['threadId', 'description', 'sequence'],
       where: 'nodeId = ?',
       whereArgs: [nodeId],
       orderBy: 'sequence');
   final threads = <NoteThread>[];
   for (Map<String, dynamic> e in result) {
-    threads.add(await getNoteThread(db, e['threadId']));
+    threads.add(NoteThread(
+      e['threadId'],
+      nodeId: nodeId,
+      description: e['description'],
+      sequence: e['sequence'],
+      notes: await getNotesInThread(db, e['threadId']),
+    ));
   }
 
   developer.log(
@@ -462,6 +473,7 @@ Future<NoteThread> addThreadToNode(
   Database db,
   Node node,
   double chapterNum, {
+  String description = "", // A short description or title of the thread
   String message = "", // Message to put in the first note of the thread
   int sequence = 9999, // Sequence number, 1 is at the top
   List<NoteThread> threads, // Existing threads of the target node
@@ -469,10 +481,21 @@ Future<NoteThread> addThreadToNode(
   // TODO: verify the sequence number, rearrange other threads' sequence numbers if necessary
   final int threadId = await db.insert(
     'threads',
-    {'nodeId': node.nodeId, 'sequence': sequence},
+    {'nodeId': node.nodeId, 'description': description, 'sequence': sequence},
   );
-  final thread = NoteThread(threadId, []);
-  thread.notes.add(await addNoteToThread(db, thread, chapterNum));
+  final thread = NoteThread(
+    threadId,
+    nodeId: node.nodeId,
+    description: description,
+    sequence: sequence,
+    notes: [],
+  );
+  thread.notes.add(await addNoteToThread(
+    db,
+    thread,
+    chapterNum,
+    message: 'Empty Note',
+  ));
   return thread;
 }
 
@@ -483,12 +506,20 @@ Future<Note> editNote(Database db, Note note,
     'message': newMessage ?? note.message,
     'chapter': chapter ?? note.chapter
   };
+
+  developer.log(
+      'Attempting to edit note ${note.noteId} with new message "${values['message']}" and chapter number ${values['chapter']}',
+      name: 'models.editNote()');
+
   final int count = await db
       .update('notes', values, where: 'noteId = ?', whereArgs: [note.noteId]);
   if (count > 1) {
     errorAndRollback();
     return note;
   }
+
+  developer.log('Successfully edited note ${note.noteId}',
+      name: 'models.editNote()');
   return Note(note.noteId, values['message'], values['chapter']);
 }
 
