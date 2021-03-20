@@ -163,7 +163,7 @@ class _TreeScreenState extends State<TreeScreen> {
           await models.getChildren(widget.database, copyTreeNode.node.nodeId);
       copyChildNodes.forEach((copyChild) {
         // Finds a matching node among the original's children, else is null
-        final origChildTreeNode = origTreeNode.children.firstWhere(
+        final origChildTreeNode = origTreeNode.children?.firstWhere(
             (element) => element.node.nodeId == copyChild.nodeId,
             orElse: () => null);
         final copyChildTreeNode = _TreeNode(widget.database, copyChild,
