@@ -7,10 +7,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:novelnotebook/models.dart' show Metadata;
 
 // TABLE metadata
-//   dataId    INTEGER PRIMARY KEY
+//   dataId    STRING PRIMARY KEY
 //   dataValue TEXT
 const CREATE_TABLE_METADATA = 'CREATE TABLE IF NOT EXISTS metadata ( '
-    'dataId INTEGER PRIMARY KEY, '
+    'dataId TEXT PRIMARY KEY, '
     'dataValue TEXT '
     ');';
 
@@ -156,30 +156,10 @@ Future<void> setupDatabaseV1(Database db) async {
   await db.execute(CREATE_TABLE_NOTES);
 
   // Add the default metadata
-  const metaDefaults = Metadata();
-  await db.execute(
-      'INSERT INTO metadata (dataId, dataValue) '
-      'VALUES '
-      '(${Metadata.novelNameId}, ?), '
-      '(${Metadata.lastChapterId}, ?), '
-      '(${Metadata.authorNameId}, ?), '
-      '(${Metadata.sourceTypeId}, ?), '
-      '(${Metadata.novelNameOrigId}, ?), '
-      '(${Metadata.novelNameTransId}, ?), '
-      '(${Metadata.translatorNameId}, ?), '
-      '(${Metadata.ratingId}, ?), '
-      '(${Metadata.origLanguageId}, ?); ',
-      [
-        metaDefaults.novelName,
-        metaDefaults.lastChapter.toString(),
-        metaDefaults.authorName,
-        metaDefaults.sourceTypeIdx.toString(),
-        metaDefaults.novelNameOrig,
-        metaDefaults.novelNameTrans,
-        metaDefaults.translatorName,
-        metaDefaults.rating.toString(),
-        metaDefaults.origLanguageIdx.toString(),
-      ]);
+  for (String key in Metadata.defaults.keys) {
+    await db.insert(
+        'metadata', {'dataId': key, 'dataValue': Metadata.defaults[key]});
+  }
 
   // Add the default categories
   await db.execute('INSERT INTO categories (categoryId, catName, catColor) '

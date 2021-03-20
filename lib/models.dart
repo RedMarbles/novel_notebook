@@ -57,17 +57,19 @@ class Note {
 }
 
 class Metadata {
-  static const int novelNameId = 1; // String
-  final String novelName;
-
-  static const int lastChapterId = 2; // Float
-  final double lastChapter;
-
-  static const int authorNameId = 3; // String
-  final String authorName;
+  static const Map<String, String> defaults = {
+    "novelName": "Untitled", // String
+    "lastChapter": "1.0", // Double
+    "authorName": "Unknown", // String
+    "novelNameOrig": "Unknown", // String
+    "novelNameTrans": "Unknown", // String
+    "translatorName": "Unknown", // String
+    "rating": "0.0", // Double
+    "sourceTypeIdx": "0", // Int, index in the list
+    "languageOrigIdx": "0", // Int, index in the list
+  };
 
   // Enum idx - one of Webnovel / LN / VN / Manga / Anime
-  static const int sourceTypeId = 4;
   static const List<String> sourceTypeList = [
     'Unknown',
     'Webnovel',
@@ -76,27 +78,9 @@ class Metadata {
     'Manga',
     'Anime',
   ];
-  final int sourceTypeIdx;
-
-  // String - name of the novel in the original language
-  static const int novelNameOrigId = 5;
-  final String novelNameOrig;
-
-  // String - name of the novel in english or the reader's language
-  static const int novelNameTransId = 6;
-  final String novelNameTrans;
-
-  // String - name of the main translator
-  static const int translatorNameId = 7;
-  final String translatorName;
-
-  // Float - rating given to the novel (out of 5?)
-  static const int ratingId = 8;
-  final double rating;
 
   // Enum idx - The original language of the story
-  static const int origLanguageId = 9;
-  static const List<String> origLanguageList = [
+  static const List<String> languageOrigList = [
     'Unknown',
     'English',
     'Japanese',
@@ -107,24 +91,58 @@ class Metadata {
     'Spanish',
     'Indonesian',
   ];
-  final int origLanguageIdx;
 
-  const Metadata({
-    this.novelName = 'Unknown',
-    this.lastChapter = 1.0,
-    this.authorName = 'Unknown',
-    this.sourceTypeIdx = 0,
-    this.novelNameOrig = 'Unknown',
-    this.novelNameTrans = 'Unknown',
-    this.translatorName = 'Unknown',
-    this.rating = 0.0,
-    this.origLanguageIdx = 0,
-  });
+  final Map<String, String> values;
+
+  factory Metadata.fromMap(Map<String, String> input) {
+    final temp = Map<String, String>.from(
+        defaults); // Initialized as a copy of the default map
+    input.keys.forEach((key) {
+      // Overwrite only the metadata entries that are in defaults
+      if (defaults.containsKey(key)) temp[key] = input[key];
+    });
+
+    // Check that the index ranges are valid
+    final sourceTypeIdx = int.parse(temp['sourceTypeIdx']);
+    if (sourceTypeIdx < 0 || sourceTypeIdx >= sourceTypeList.length) {
+      temp['sourceTypeIdx'] = defaults['sourceTypeIdx'];
+    }
+    final languageOriIdx = int.parse(temp['languageOrigIdx']);
+    if (languageOriIdx < 0 || languageOriIdx >= languageOrigList.length) {
+      temp['languageOrigIdx'] = defaults['languageOrigIdx'];
+    }
+
+    return Metadata._safeInit(temp);
+  }
+
+  factory Metadata.uninitialized() {
+    return Metadata._safeInit(defaults);
+  }
+
+  const Metadata._safeInit(this.values);
 }
 
 Future<bool> errorAndRollback() async {
   // TODO: Do something to rollback changes after an error in updating
   return false;
+}
+
+// Retrieve the metadata of the novel
+Future<Metadata> getMetadata(Database db) async {
+  developer.log('Attempting to fetch novel metadata',
+      name: 'models.getMetadata()');
+  final List<Map<String, dynamic>> result =
+      await db.query('metadata', columns: ['dataId', 'dataValue']);
+
+  final values = Map<String, String>();
+  result.forEach((Map<String, dynamic> element) {
+    values[element['dataId']] = element['dataValue'];
+  });
+
+  developer.log('Extracted Metadata: ${values.toString()}',
+      name: 'models.getMetadata()');
+
+  return Metadata.fromMap(values);
 }
 
 // Retrieve the list of all categories

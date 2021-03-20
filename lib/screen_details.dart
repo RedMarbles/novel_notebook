@@ -34,6 +34,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   List<models.Nickname> nicknames = [];
   List<models.NoteThread> noteThreads = [];
   Map<int, models.Category> categories = {};
+  models.Metadata metadata = models.Metadata.uninitialized();
 
   @override
   void initState() {
@@ -49,6 +50,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       models.getNicknames(widget.database, widget.nodeId),
       models.getThreadsInNode(widget.database, widget.nodeId),
       models.getCategories(widget.database),
+      models.getMetadata(widget.database),
     ]).then((futures) {
       setState(() {
         node = futures[0];
@@ -56,6 +58,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         nicknames = futures[2];
         noteThreads = futures[3];
         categories = futures[4];
+        metadata = futures[5];
       });
       developer.log(
           "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
