@@ -12,6 +12,12 @@ import 'package:novelnotebook/screen_details.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:sqflite/sqflite.dart';
 
+// TODO: Keep track of current chapter number, allow easy editing of current chapter number
+// TODO: Allow changing order of children of each TreeNode
+// TODO: Metadeta editor
+// TODO: Create, edit and delete categories
+// TODO: Scroll bar / slider for viewing more of the tree
+
 class _TreeNode {
   final Database db;
   bool expand;

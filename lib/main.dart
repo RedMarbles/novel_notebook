@@ -5,6 +5,9 @@ void main() {
   runApp(MyApp());
 }
 
+// TODO: Add a launcher icon
+// TODO: Create a digital certificate for the app
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override

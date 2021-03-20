@@ -14,6 +14,10 @@ import 'package:sqflite/sqflite.dart';
    4. Show description text of the item, and add or remove description text
  */
 
+// TODO: Use FloatingActionButton to add new note threads
+// TODO: New screen for reordering note threads by dragging
+// TODO: Verify that deleting nodes works correctly
+
 class DetailsScreen extends StatefulWidget {
   final Database database;
   final int nodeId;
@@ -142,6 +146,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       defaultValue: false,
     );
     if (deleted) {
+      // TODO: Implement deletion of node
       Navigator.pop(context);
     } else {
       // TODO: Do something else if the deletion failed

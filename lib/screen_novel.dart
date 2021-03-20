@@ -24,6 +24,7 @@ class _NovelScreenState extends State<NovelScreen> {
   void initState() {
     super.initState();
 
+    // TODO : Allow creating, renaming, resetting and deleting databases
     databaseNames = ["sample"]; // TODO: Change this into a folder lookup later
   }
 
