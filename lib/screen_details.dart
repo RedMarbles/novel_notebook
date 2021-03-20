@@ -141,7 +141,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
       cancelButtonText: 'Cancel',
       defaultValue: false,
     );
-    // TODO : If node is successfully deleted, pop the navigation stack
+    if (deleted) {
+      Navigator.pop(context);
+    } else {
+      // TODO: Do something else if the deletion failed
+    }
   }
 
   // View a dialog to edit the name of the node
