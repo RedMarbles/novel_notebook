@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:novelnotebook/models.dart' show Metadata;
 
 // TABLE metadata
 //   dataId    INTEGER PRIMARY KEY
@@ -12,20 +13,6 @@ const CREATE_TABLE_METADATA = 'CREATE TABLE IF NOT EXISTS metadata ( '
     'dataId INTEGER PRIMARY KEY, '
     'dataValue TEXT '
     ');';
-
-class MetaDataId {
-  static const int novelName = 1; // String
-  static const int lastChapter = 2; // Float
-  static const int authorName = 3; // String
-  static const int sourceType =
-      4; // String - one of Webnovel / LN / VN / Manga / Anime
-  static const int novelNameOrig =
-      5; // String - name of the novel in the original language
-  static const int novelNameTrans =
-      6; // String - name of the novel in english or the reader's language
-  static const int translatorName = 7; // String - name of the main translator
-  static const int rating = 8; // Float - rating given to the novel (out of 5?)
-}
 
 const int DEFAULT_CATEGORY_ID = 1;
 
@@ -169,16 +156,30 @@ Future<void> setupDatabaseV1(Database db) async {
   await db.execute(CREATE_TABLE_NOTES);
 
   // Add the default metadata
-  await db.execute('INSERT INTO metadata (dataId, dataValue) '
+  const metaDefaults = Metadata();
+  await db.execute(
+      'INSERT INTO metadata (dataId, dataValue) '
       'VALUES '
-      '(${MetaDataId.novelName}, "unknown"), '
-      '(${MetaDataId.lastChapter}, "0.0"), '
-      '(${MetaDataId.authorName}, "unknown"), '
-      '(${MetaDataId.sourceType}, "unknown"), '
-      '(${MetaDataId.novelNameOrig}, "unknown"), '
-      '(${MetaDataId.novelNameTrans}, "unknown"), '
-      '(${MetaDataId.translatorName}, "unknown"), '
-      '(${MetaDataId.rating}, "0.0"); ');
+      '(${Metadata.novelNameId}, ?), '
+      '(${Metadata.lastChapterId}, ?), '
+      '(${Metadata.authorNameId}, ?), '
+      '(${Metadata.sourceTypeId}, ?), '
+      '(${Metadata.novelNameOrigId}, ?), '
+      '(${Metadata.novelNameTransId}, ?), '
+      '(${Metadata.translatorNameId}, ?), '
+      '(${Metadata.ratingId}, ?), '
+      '(${Metadata.origLanguageId}, ?); ',
+      [
+        metaDefaults.novelName,
+        metaDefaults.lastChapter.toString(),
+        metaDefaults.authorName,
+        metaDefaults.sourceTypeIdx.toString(),
+        metaDefaults.novelNameOrig,
+        metaDefaults.novelNameTrans,
+        metaDefaults.translatorName,
+        metaDefaults.rating.toString(),
+        metaDefaults.origLanguageIdx.toString(),
+      ]);
 
   // Add the default categories
   await db.execute('INSERT INTO categories (categoryId, catName, catColor) '

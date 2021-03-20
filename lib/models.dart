@@ -56,6 +56,72 @@ class Note {
   const Note(this.noteId, this.message, this.chapter);
 }
 
+class Metadata {
+  static const int novelNameId = 1; // String
+  final String novelName;
+
+  static const int lastChapterId = 2; // Float
+  final double lastChapter;
+
+  static const int authorNameId = 3; // String
+  final String authorName;
+
+  // Enum idx - one of Webnovel / LN / VN / Manga / Anime
+  static const int sourceTypeId = 4;
+  static const List<String> sourceTypeList = [
+    'Unknown',
+    'Webnovel',
+    'Light Novel',
+    'Visual Novel',
+    'Manga',
+    'Anime',
+  ];
+  final int sourceTypeIdx;
+
+  // String - name of the novel in the original language
+  static const int novelNameOrigId = 5;
+  final String novelNameOrig;
+
+  // String - name of the novel in english or the reader's language
+  static const int novelNameTransId = 6;
+  final String novelNameTrans;
+
+  // String - name of the main translator
+  static const int translatorNameId = 7;
+  final String translatorName;
+
+  // Float - rating given to the novel (out of 5?)
+  static const int ratingId = 8;
+  final double rating;
+
+  // Enum idx - The original language of the story
+  static const int origLanguageId = 9;
+  static const List<String> origLanguageList = [
+    'Unknown',
+    'English',
+    'Japanese',
+    'Chinese',
+    'Korean',
+    'French',
+    'German',
+    'Spanish',
+    'Indonesian',
+  ];
+  final int origLanguageIdx;
+
+  const Metadata({
+    this.novelName = 'Unknown',
+    this.lastChapter = 1.0,
+    this.authorName = 'Unknown',
+    this.sourceTypeIdx = 0,
+    this.novelNameOrig = 'Unknown',
+    this.novelNameTrans = 'Unknown',
+    this.translatorName = 'Unknown',
+    this.rating = 0.0,
+    this.origLanguageIdx = 0,
+  });
+}
+
 Future<bool> errorAndRollback() async {
   // TODO: Do something to rollback changes after an error in updating
   return false;
