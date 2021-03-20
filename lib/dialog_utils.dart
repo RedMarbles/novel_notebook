@@ -15,13 +15,13 @@ Future<String> showTextEditDialog(BuildContext context,
             InputDecoration(hintText: hintText, border: OutlineInputBorder()),
       ),
       actions: [
-        FlatButton(
+        TextButton(
           child: Text('Cancel'),
           onPressed: () {
             Navigator.pop(context, null);
           },
         ),
-        FlatButton(
+        TextButton(
             child: Text('Accept'),
             onPressed: () {
               Navigator.pop(context, controller.value.text);

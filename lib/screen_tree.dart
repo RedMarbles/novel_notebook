@@ -24,7 +24,7 @@ class _TreeNode {
   models.Node node;
   List<_TreeNode> children; // if null, then it's uninitialized
 
-  _TreeNode(this.db, this.node, {this.expand = false}) {}
+  _TreeNode(this.db, this.node, {this.expand = false});
 
   Future<void> loadChildren({@required _TreeScreenState widget}) async {
     if (children != null) return;

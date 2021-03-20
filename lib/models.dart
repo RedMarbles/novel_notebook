@@ -229,7 +229,7 @@ Future<List<Node>> getParents(Database db, int nodeId) async {
       'ORDER BY n.nodeId ASC; ', // Ordering by this for no specific reason
       [nodeId]);
   // Non-root nodes need at least one parent
-  if (nodeId != 1 && result.length < 1) return List<Node>();
+  if (nodeId != 1 && result.length < 1) return List<Node>.empty();
   developer.log('Successfully retrieved parents of node id $nodeId',
       name: 'models.getParents()');
   return List<Node>.generate(

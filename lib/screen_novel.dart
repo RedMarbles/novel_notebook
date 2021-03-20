@@ -6,7 +6,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
-import 'package:novelnotebook/screen_details.dart';
 import 'package:novelnotebook/screen_tree.dart';
 import 'package:sqflite/sqflite.dart';
 
