@@ -114,8 +114,34 @@ const CREATE_TABLE_NOTES = 'CREATE TABLE IF NOT EXISTS notes ( '
 // Suffix to use for database names
 const String _DB_NAME_EXTENSION = '_notebook.db';
 
+// Search for any database files that might have been left open
+// This happens if the app was closed forcefully by clearing the RAM
+Future<void> closeOpenedDatabases(Directory dir) async {
+  final unclosedFiles = await FileManager(
+    root: dir,
+    filter: SimpleFileFilter(allowedExtensions: [
+      'db-wal',
+      // 'db-shm', // Only search for one of the two temp file types
+    ], fileOnly: true),
+  ).walk().map((e) => e.path).toList();
+
+  unclosedFiles.forEach((unclosedFile) {
+    // The filename of the unclosed file is without the '-wal' extension
+    final String databasePath =
+        unclosedFile.substring(0, unclosedFile.length - 4);
+    developer.log('Closing unclosed database $databasePath',
+        name: 'databases.closeOpenedDatabases()');
+    openDatabase(databasePath).then((db) {
+      db.close();
+    });
+  });
+}
+
+// Retrieve the list of databases in the internal storage
 Future<List<String>> getNovelDatabasesList() async {
   final dir = Directory(await getDatabasesPath());
+  await closeOpenedDatabases(dir);
+
   final files = await FileManager(
           root: dir,
           filter: SimpleFileFilter(allowedExtensions: ['db'], fileOnly: true))
@@ -125,20 +151,42 @@ Future<List<String>> getNovelDatabasesList() async {
       .map((String filename) =>
           filename.substring(0, filename.length - _DB_NAME_EXTENSION.length))
       .toList();
+
   return files;
 }
 
+Future<bool> renameNovelDatabase(String oldName, String newName) async {
+  final oldPath =
+      PathUtils.join(await getDatabasesPath(), oldName + _DB_NAME_EXTENSION);
+  final newPath =
+      PathUtils.join(await getDatabasesPath(), newName + _DB_NAME_EXTENSION);
+  final File _ = await File(oldPath).rename(newPath);
+  developer.log('Renamed $oldName database to $newName',
+      name: 'database.renameNovelDatabase()');
+  return true;
+}
+
+Future<bool> deleteNovelDatabase(String dbName) async {
+  final databasePath =
+      PathUtils.join(await getDatabasesPath(), dbName + _DB_NAME_EXTENSION);
+  deleteDatabase(databasePath);
+  developer.log('Deleted database $dbName',
+      name: 'database.deleteNovelDatabase()');
+  return true;
+}
+
 // Get the relevant database from the filesystem
-Future<Database> initializeDatabases(String novelName) async {
+Future<Database> initializeNovelDatabase(String novelName,
+    {bool reset = false}) async {
   // Ensure widgets are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
   // Path to the database
   final databasePath =
-      PathUtils.join(await getDatabasesPath(), '$novelName$_DB_NAME_EXTENSION');
+      PathUtils.join(await getDatabasesPath(), novelName + _DB_NAME_EXTENSION);
 
   developer.log('Opening database located at : $databasePath',
-      name: 'database.initializeDatabases()');
+      name: 'database.initializeNovelDatabase()');
 
   // Open the database
   final Future<Database> database = openDatabase(
@@ -147,10 +195,20 @@ Future<Database> initializeDatabases(String novelName) async {
     onCreate: (db, version) async {
       developer.log(
           'Database not found. Creating new database at : $databasePath',
-          name: 'database.initializeDatabases()');
+          name: 'database.initializeNovelDatabase()');
 
       await setupDatabaseV1(db);
       await setupSampleDataV1(db);
+    },
+    onOpen: (db) async {
+      if (reset) {
+        // Reset the database - delete all tables, then recreate the db with default data
+        await deleteAllTablesDatabase(db);
+        await setupDatabaseV1(db);
+        await setupSampleDataV1(db);
+        developer.log('Database reset complete',
+            name: 'database.initializeDatabases.onOpen()');
+      }
     },
     // Set the version number, used for database upgrades and downgrades
     version: 1,
@@ -164,6 +222,16 @@ Future<Database> initializeDatabases(String novelName) async {
   );
 
   return database;
+}
+
+Future<void> deleteAllTablesDatabase(Database db) async {
+  await db.execute('DROP TABLE IF EXISTS notes;');
+  await db.execute('DROP TABLE IF EXISTS threads;');
+  await db.execute('DROP TABLE IF EXISTS nicknames;');
+  await db.execute('DROP TABLE IF EXISTS nodes_nodes;');
+  await db.execute('DROP TABLE IF EXISTS nodes;');
+  await db.execute('DROP TABLE IF EXISTS categories;');
+  await db.execute('DROP TABLE IF EXISTS metadata;');
 }
 
 Future<void> setupDatabaseV1(Database db) async {

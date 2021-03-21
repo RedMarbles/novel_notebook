@@ -162,3 +162,25 @@ Future<models.Note> showNoteEditDialog(
 
   return resultNote;
 }
+
+Future<int> showOptionsDialog(BuildContext context, List<String> optionsStrings,
+    {String title = 'Options'}) async {
+  final int resultIdx = await showDialog<int>(
+    context: context,
+    builder: (_) => SimpleDialog(
+      title: Text(title),
+      children: List<Widget>.generate(
+        optionsStrings.length,
+        (index) => SimpleDialogOption(
+          padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+          child: Text(optionsStrings[index]),
+          onPressed: () {
+            Navigator.pop(context, index);
+          },
+        ),
+      ),
+    ),
+  );
+
+  return resultIdx;
+}
