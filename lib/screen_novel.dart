@@ -4,6 +4,8 @@
    3. Drawer to access settings of the whole app
  */
 
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/screen_tree.dart';
@@ -24,7 +26,14 @@ class _NovelScreenState extends State<NovelScreen> {
     super.initState();
 
     // TODO : Allow creating, renaming, resetting and deleting databases
-    databaseNames = ["sample"]; // TODO: Change this into a folder lookup later
+
+    getNovelDatabasesList().then((List<String> result) {
+      setState(() {
+        developer.log('Databases located: ${result.toString()}',
+            name: 'screen_novel._NovelScreenState.initState()');
+        databaseNames = result;
+      });
+    });
   }
 
   @override
@@ -37,8 +46,9 @@ class _NovelScreenState extends State<NovelScreen> {
       body: Stack(
         children: [
           Column(
-            children: List.generate(databaseNames.length,
-                (index) => _databaseButton(databaseNames[index])),
+            children: databaseNames
+                .map((String dbName) => _databaseButton(dbName))
+                .toList(),
           ),
           Center(
             child: (loadingDb) ? CircularProgressIndicator() : null,

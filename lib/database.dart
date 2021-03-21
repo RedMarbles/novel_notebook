@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:path/path.dart';
+import 'package:flutter_file_manager/flutter_file_manager.dart';
+import 'package:path/path.dart' as PathUtils;
+import 'package:path_provider/path_provider.dart'
+    as PathProvider; // TODO: Optional store or copy in external storage directory
 import 'package:sqflite/sqflite.dart';
 import 'package:novelnotebook/models.dart' show Metadata;
 
@@ -107,6 +111,23 @@ const CREATE_TABLE_NOTES = 'CREATE TABLE IF NOT EXISTS notes ( '
     '    ON UPDATE CASCADE ' // Update if parent is updated
     '); ';
 
+// Suffix to use for database names
+const String _DB_NAME_EXTENSION = '_notebook.db';
+
+Future<List<String>> getNovelDatabasesList() async {
+  final dir = Directory(await getDatabasesPath());
+  final files = await FileManager(
+          root: dir,
+          filter: SimpleFileFilter(allowedExtensions: ['db'], fileOnly: true))
+      .walk()
+      .map((FileSystemEntity file) => file.path)
+      .map((String fullFileName) => PathUtils.basename(fullFileName))
+      .map((String filename) =>
+          filename.substring(0, filename.length - _DB_NAME_EXTENSION.length))
+      .toList();
+  return files;
+}
+
 // Get the relevant database from the filesystem
 Future<Database> initializeDatabases(String novelName) async {
   // Ensure widgets are initialized
@@ -114,7 +135,7 @@ Future<Database> initializeDatabases(String novelName) async {
 
   // Path to the database
   final databasePath =
-      join(await getDatabasesPath(), '${novelName}_notebook.db');
+      PathUtils.join(await getDatabasesPath(), '$novelName$_DB_NAME_EXTENSION');
 
   developer.log('Opening database located at : $databasePath',
       name: 'database.initializeDatabases()');

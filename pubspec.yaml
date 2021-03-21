@@ -35,6 +35,12 @@ dependencies:
   # tools for path manipulation of filename strings
   path: ^1.7.0
 
+  # tool for getting commonly used filesystem locations
+  path_provider: ^2.0.1
+
+  # tool for traversing the folder structure
+  flutter_file_manager: ^0.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
