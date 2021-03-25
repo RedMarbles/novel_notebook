@@ -148,10 +148,6 @@ class _NovelScreenState extends State<NovelScreen> {
       if (check) {
         await initializeNovelDatabase(dbName, reset: true);
         reloadState();
-        showMessageDialog(context,
-            title: 'Reset Database',
-            message:
-                'Database $dbName has been completely reset to default data');
       }
     } else if (choiceIdx == 2) {
       // Delete the database
@@ -161,9 +157,6 @@ class _NovelScreenState extends State<NovelScreen> {
       if (check) {
         await deleteNovelDatabase(dbName);
         reloadState();
-        showMessageDialog(context,
-            title: 'Delete database',
-            message: 'Database $dbName has been deleted');
       }
     }
   }
