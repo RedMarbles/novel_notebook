@@ -7,6 +7,7 @@ import 'package:flutter_file_manager/flutter_file_manager.dart';
 import 'package:path/path.dart' as PathUtils;
 import 'package:path_provider/path_provider.dart'
     as PathProvider; // TODO: Optional store or copy in external storage directory
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:novelnotebook/models.dart' show Metadata;
 
@@ -113,6 +114,47 @@ const CREATE_TABLE_NOTES = 'CREATE TABLE IF NOT EXISTS notes ( '
 
 // Suffix to use for database names
 const String _DB_NAME_EXTENSION = '_notebook.db';
+
+Future<bool> requestAndroidStorageWritePermission() async {
+  final status = await Permission.storage.status;
+  if (status.isGranted)
+    return true;
+  else if (status.isPermanentlyDenied)
+    return false;
+  else if (status.isDenied) {
+    // We didn't ask for permission yet or the permission has been denied but not permanently
+    final requestStatus = await Permission.storage.request();
+    return requestStatus.isGranted;
+  } else {
+    return false;
+  }
+}
+
+// Exports a novel to the default destination directory
+Future<File> exportNovelDatabase(String novelName) async {
+  final writePerm = await requestAndroidStorageWritePermission();
+  if (!writePerm) {
+    developer.log('Write access to storage denied.',
+        name: 'database.exportNovelDatabase()');
+  }
+
+  final srcPath =
+      PathUtils.join(await getDatabasesPath(), novelName + _DB_NAME_EXTENSION);
+
+  // TODO: make the iOS version of this later
+  final Directory dstDir = await PathProvider.getExternalStorageDirectory();
+  final dstPath = PathUtils.join(dstDir.path, novelName + _DB_NAME_EXTENSION);
+
+  developer.log('Source database location: $srcPath',
+      name: 'database.exportNovelDatabase()');
+  developer.log('Target export location:   $dstPath',
+      name: 'database.exportNovelDatabase()');
+
+  final File srcFile = File(srcPath);
+  final File dstFile = await srcFile.copy(dstPath);
+
+  return dstFile;
+}
 
 // Search for any database files that might have been left open
 // This happens if the app was closed forcefully by clearing the RAM

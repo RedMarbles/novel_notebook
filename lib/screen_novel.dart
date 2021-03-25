@@ -124,6 +124,7 @@ class _NovelScreenState extends State<NovelScreen> {
   void _longPressCallback(String dbName) async {
     const optionsStrings = <String>[
       'Rename Database',
+      'Export Database',
       'Reset Database',
       'Delete Database'
     ];
@@ -141,6 +142,18 @@ class _NovelScreenState extends State<NovelScreen> {
         reloadState();
       }
     } else if (choiceIdx == 1) {
+      // Export the database
+      final bool check = await showConfirmationDialog(context,
+          title: 'Export Database',
+          message: 'Are you sure you want to export the $dbName database?');
+      if (check) {
+        final file = await exportNovelDatabase(dbName);
+        await showMessageDialog(context,
+            message: 'Database exported to ${file?.path}',
+            title: 'Export complete');
+        reloadState(); // Probably unnecessary
+      }
+    } else if (choiceIdx == 2) {
       // Reset the database
       final bool check = await showConfirmationDialog(context,
           title: 'Reset Database',
@@ -149,7 +162,7 @@ class _NovelScreenState extends State<NovelScreen> {
         await initializeNovelDatabase(dbName, reset: true);
         reloadState();
       }
-    } else if (choiceIdx == 2) {
+    } else if (choiceIdx == 3) {
       // Delete the database
       final bool check = await showConfirmationDialog(context,
           title: 'Delete database',
