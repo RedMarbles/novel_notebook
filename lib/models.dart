@@ -523,7 +523,8 @@ Future<List<NoteThread>> getThreadsInNode(Database db, int nodeId) async {
     threads.add(NoteThread(
       e['threadId'],
       nodeId: nodeId,
-      description: e['description'],
+      description: e['description']
+          .toString(), // TODO: Remove this toString() conversion after updating all the databases
       sequence: e['sequence'],
       notes: await getNotesInThread(db, e['threadId']),
     ));
