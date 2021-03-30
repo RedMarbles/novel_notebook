@@ -19,24 +19,23 @@ import 'package:sqflite/sqflite.dart';
 // TODO: Scroll bar / slider for viewing more of the tree
 
 class _TreeNode {
-  final Database db;
-  bool expand;
-  models.Node node;
+  final Key key;
+  final models.Node node;
   List<_TreeNode> children; // if null, then it's uninitialized
+  bool expand; // Whether this tree's children are expanded or not
 
-  _TreeNode(this.db, this.node, {this.expand = false});
+  _TreeNode(this.node, {this.key, this.children, this.expand = false});
 
-  Future<void> loadChildren({@required _TreeScreenState widget}) async {
+  void loadChildren(Map<int, models.Node> nodes, Map<int, List<int>> childIds) {
     if (children != null) return;
-    if (db == null || widget == null) return;
 
-    widget.setLoadingState();
-    final childNodes = await models.getChildren(db, node.nodeId);
-    children = List<_TreeNode>.generate(
-      childNodes.length,
-      (index) => _TreeNode(db, childNodes[index], expand: false),
-    );
-    widget.unsetLoadingState();
+    children = childIds[node.nodeId]
+        ?.map((childId) => _TreeNode(
+              nodes[childId],
+              key: ValueKey('$key.$childId'),
+              expand: false,
+            ))
+        ?.toList();
   }
 }
 
@@ -52,6 +51,8 @@ class TreeScreen extends StatefulWidget {
 class _TreeScreenState extends State<TreeScreen> {
   _TreeNode root;
   Map<int, models.Category> categories;
+  Map<int, List<int>> children;
+  Map<int, models.Node> nodes;
   int numLoadingNodes = 0;
 
   @override
@@ -59,8 +60,10 @@ class _TreeScreenState extends State<TreeScreen> {
     super.initState();
 
     // Default value of root
-    root = _TreeNode(widget.database,
+    root = _TreeNode(
         models.Node(ROOT_NODE_ID, 'Loading...', DEFAULT_CATEGORY_ID),
+        key: ValueKey('$ROOT_NODE_ID'),
+        children: [],
         expand: true);
     root.children = [];
 
@@ -109,7 +112,7 @@ class _TreeScreenState extends State<TreeScreen> {
       ),
       body: Stack(children: [
         ListView(
-          children: _generateTreeStructure(),
+          children: _generateTreeStructure(reversed: true),
         ),
         Center(
           child: (numLoadingNodes < 1 && root != null)
@@ -146,11 +149,10 @@ class _TreeScreenState extends State<TreeScreen> {
   Future<void> reloadTree() async {
     developer.log('Reloading database tree...',
         name: 'screen_tree.TreeScreen.reloadTree()');
-    await reloadCategories();
+    await reloadData();
     final stack = <_TreeNodePair>[];
-    final _TreeNode rootCopy = _TreeNode(widget.database,
-        await models.getNode(widget.database, root.node.nodeId),
-        expand: root.expand);
+    final _TreeNode rootCopy =
+        _TreeNode(nodes[root.node.nodeId], key: root.key, expand: root.expand);
     stack.add(_TreeNodePair(root, rootCopy));
 
     while (stack.isNotEmpty) {
@@ -158,23 +160,22 @@ class _TreeScreenState extends State<TreeScreen> {
       final copyTreeNode = stack.last.copy;
       stack.removeLast();
 
+      // Load the children of this node, keeping their 'expand' values as false
+      copyTreeNode.loadChildren(nodes, children);
+
+      // If this copy was not present in the original tree, then stop processing here
       if (origTreeNode == null) {
-        copyTreeNode.loadChildren(widget: this);
         continue;
       }
 
-      copyTreeNode.children = <_TreeNode>[];
-
-      final copyChildNodes =
-          await models.getChildren(widget.database, copyTreeNode.node.nodeId);
-      copyChildNodes.forEach((copyChild) {
-        // Finds a matching node among the original's children, else is null
+      copyTreeNode.children.forEach((copyChildTreeNode) {
+        // Find a matching node among the original's children, else is null
         final origChildTreeNode = origTreeNode.children?.firstWhere(
-            (element) => element.node.nodeId == copyChild.nodeId,
+            (element) => element.node.nodeId == copyChildTreeNode.node.nodeId,
             orElse: () => null);
-        final copyChildTreeNode = _TreeNode(widget.database, copyChild,
-            expand: origChildTreeNode?.expand ?? false);
-        copyTreeNode.children.add(copyChildTreeNode);
+        copyChildTreeNode.expand = origChildTreeNode?.expand ?? false;
+
+        // Add both the orig and child to the stack for processing in the next iteration
         stack.add(_TreeNodePair(origChildTreeNode, copyChildTreeNode));
       });
     }
@@ -187,13 +188,18 @@ class _TreeScreenState extends State<TreeScreen> {
         name: 'screen_tree.TreeScreen.reloadTree()');
   }
 
-  Future<void> reloadCategories() async {
+  Future<void> reloadData() async {
     setLoadingState();
 
-    final temp = await models.getCategories(widget.database);
-
+    final futures = await Future.wait([
+      models.getCategories(widget.database),
+      models.getNodes(widget.database),
+      models.getAllChildIds(widget.database),
+    ]);
     setState(() {
-      categories = temp;
+      categories = futures[0];
+      nodes = futures[1];
+      children = futures[2];
     });
 
     unsetLoadingState();
@@ -202,6 +208,7 @@ class _TreeScreenState extends State<TreeScreen> {
   // Constructs each row element of the ListView, spaced away from the edge by the nest level
   Widget _rowElement(_TreeNode treeNode, int nestLevel) {
     return Container(
+      key: treeNode.key,
       color: Colors.white,
       padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
       child: Row(
@@ -221,7 +228,7 @@ class _TreeScreenState extends State<TreeScreen> {
                 ? null
                 : () {
                     treeNode.children.forEach((element) {
-                      element.loadChildren(widget: this);
+                      element.loadChildren(nodes, children);
                     });
                     setState(() {
                       treeNode.expand = !treeNode.expand;
@@ -261,7 +268,7 @@ class _TreeScreenState extends State<TreeScreen> {
     );
   }
 
-  List<Widget> _generateTreeStructure() {
+  List<Widget> _generateTreeStructure({bool reversed = false}) {
     final rowList = <Widget>[];
     if (root == null) return rowList;
 
@@ -279,7 +286,9 @@ class _TreeScreenState extends State<TreeScreen> {
       rowList.add(_rowElement(currTreeNode, currNestedLv));
       rowList.add(Divider(height: 1, thickness: 1, color: Colors.black));
       if (currTreeNode.expand) {
-        currTreeNode.children.reversed.forEach((element) {
+        final it =
+            (reversed) ? currTreeNode.children.reversed : currTreeNode.children;
+        it.forEach((element) {
           treeNodeStack.add(element);
           nestedLvStack.add(currNestedLv + 1);
         });

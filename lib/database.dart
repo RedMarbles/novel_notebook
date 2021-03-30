@@ -307,7 +307,7 @@ Future<void> setupDatabaseV1(Database db) async {
   // Add the root node into the tree at position 1
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '
       'VALUES '
-      '(1, "root", 1); ');
+      '($ROOT_NODE_ID, "root", 1); ');
 }
 
 Future<void> setupSampleDataV1(Database db) async {

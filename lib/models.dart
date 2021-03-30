@@ -191,6 +191,45 @@ Future<Node> getNode(Database db, int nodeId) async {
   );
 }
 
+Future<Map<int, Node>> getNodes(Database db) async {
+  developer.log('Attempting to get all nodes in the database',
+      name: 'models.getNodes()');
+  final List<Map<String, dynamic>> result = await db.query(
+    'nodes',
+    columns: ['nodeId', 'name', 'categoryId'],
+  );
+  if (result.length < 1) return null;
+  developer.log('Successfully retrieved all nodes in the database',
+      name: 'models.getNodes()');
+  return Map<int, Node>.fromIterable(
+    result,
+    key: (elem) => elem['nodeId'],
+    value: (elem) => Node(elem['nodeId'], elem['name'], elem['categoryId']),
+  );
+}
+
+Future<Map<int, List<int>>> getAllChildIds(Database db) async {
+  developer.log('Attempting to get all ids of child nodes in the database',
+      name: 'models.getAllChildIds()');
+  final List<Map<String, dynamic>> result = await db.query(
+    'nodes_nodes',
+    columns: ['parentId', 'childId', 'sequence'],
+    orderBy: 'parentId ASC, sequence ASC',
+  );
+
+  developer.log('Completed polling for all child ids of all nodes',
+      name: 'models.getAllChildIds()');
+  final output = Map<int, List<int>>();
+  result.forEach((Map<String, dynamic> elem) {
+    if (output.containsKey(elem['parentId'])) {
+      output[elem['parentId']].add(elem['childId']);
+    } else {
+      output[elem['parentId']] = <int>[elem['childId']];
+    }
+  });
+  return output;
+}
+
 Future<List<Node>> queryNodes(Database db, String queryString) async {
   developer.log('Running a query for the term \"$queryString\"',
       name: 'models.queryNodes()');
