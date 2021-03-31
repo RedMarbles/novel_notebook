@@ -70,7 +70,7 @@ class _NovelScreenState extends State<NovelScreen> {
       ),
       body: Stack(
         children: [
-          Column(
+          ListView(
             children: databaseNames
                 .map((String dbName) => _databaseButton(dbName))
                 .toList(),
