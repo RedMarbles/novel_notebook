@@ -158,7 +158,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   // View a dialog to edit the name of the node
   void _editNodeNameDialog() async {
-    final String newName = await showTextEditDialog(context);
+    final String newName = await showTextEditDialog(
+      context,
+      value: node.name,
+      title: 'Edit Node Name...',
+      hintText: 'Node name',
+    );
     if (newName != null) {
       await models.editNodeName(widget.database, node, newName);
       reloadState();
