@@ -186,7 +186,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       color: Color(categories[catId].catColor),
                       padding:
                           EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Text(categories[catId].catName),
+                      child: Text(
+                        categories[catId].catName,
+                        style: TextStyle(
+                            color: Color(categories[catId].catTextColor)),
+                      ),
                     )))
                 .toList(),
             onChanged: (catId) async {
@@ -206,7 +210,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget _parentView(models.Node parent) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(categories[parent.categoryId].catColor),
         border: Border.all(width: 1.0),
         borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
@@ -215,9 +219,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(parent.name),
+          Text(
+            parent.name,
+            style: TextStyle(
+                color: Color(categories[parent.categoryId].catTextColor)),
+          ),
           GestureDetector(
-            child: Icon(Icons.cancel),
+            child: Icon(
+              Icons.cancel,
+              color: Color(categories[parent.categoryId].catTextColor),
+            ),
             onTap: () async {
               // Delete parent from list if it has more than 2 parents
               if (parents.length < 2) {
@@ -309,8 +320,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final models.Node newParent = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                SearchNodeScreen(widget.database, [node, ...parents])));
+            builder: (context) => SearchNodeScreen(
+                widget.database, [node, ...parents], categories)));
     developer.log('Value returned from Nickname dialog: ${newParent?.name}',
         name: 'screen_details._DetailsScreenState._addNicknameDialog()');
     if (newParent != null) {

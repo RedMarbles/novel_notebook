@@ -13,6 +13,8 @@ class Category {
   final int categoryId;
   final String catName; // Name of the category
   final int catColor; // Color of the category
+  // TODO : Update this text color according to the database
+  final int catTextColor = 0xff000000; // Color of the text for the category
 
   const Category(this.categoryId, this.catName, this.catColor);
 }

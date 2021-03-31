@@ -7,8 +7,9 @@ import 'package:sqflite/sqflite.dart';
 class SearchNodeScreen extends StatefulWidget {
   final Database db;
   final List<Node> excludedNodes;
+  final Map<int, Category> categories;
 
-  SearchNodeScreen(this.db, this.excludedNodes);
+  SearchNodeScreen(this.db, this.excludedNodes, this.categories);
 
   @override
   _SearchNodeScreenState createState() => _SearchNodeScreenState();
@@ -65,7 +66,29 @@ class _SearchNodeScreenState extends State<SearchNodeScreen> {
                 scrollDirection: Axis.vertical,
                 itemCount: searchResultNodes.length,
                 itemBuilder: (_, index) => InkWell(
-                    child: ListTile(title: Text(searchResultNodes[index].name)),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          vertical: 16.0, horizontal: 24.0),
+                      margin:
+                          EdgeInsets.symmetric(vertical: 4.0, horizontal: 0.0),
+                      child: Text(
+                        searchResultNodes[index].name,
+                        style: TextStyle(
+                          color: Color(widget
+                              .categories[searchResultNodes[index].categoryId]
+                              .catTextColor),
+                        ),
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                        color: Color(widget
+                            .categories[searchResultNodes[index].categoryId]
+                            .catColor),
+                      ),
+                    ),
                     onTap: () {
                       Navigator.pop(context, searchResultNodes[index]);
                     }),

@@ -248,7 +248,12 @@ class _TreeScreenState extends State<TreeScreen> {
                     color: Color(categories[treeNode.node.categoryId].catColor),
                   ),
                   alignment: Alignment.centerLeft,
-                  child: Text(treeNode.node.name)),
+                  child: Text(
+                    treeNode.node.name,
+                    style: TextStyle(
+                        color: Color(
+                            categories[treeNode.node.categoryId].catTextColor)),
+                  )),
               onTap: () {
                 Navigator.push(
                   context,
