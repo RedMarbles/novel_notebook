@@ -168,7 +168,7 @@ class _TreeScreenState extends State<TreeScreen> {
         continue;
       }
 
-      copyTreeNode.children.forEach((copyChildTreeNode) {
+      copyTreeNode.children?.forEach((copyChildTreeNode) {
         // Find a matching node among the original's children, else is null
         final origChildTreeNode = origTreeNode.children?.firstWhere(
             (element) => element.node.nodeId == copyChildTreeNode.node.nodeId,
