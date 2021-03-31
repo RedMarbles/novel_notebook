@@ -85,7 +85,7 @@ class _TreeScreenState extends State<TreeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey,
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: Text('Database'), // TODO: give better name
         actions: [
@@ -209,7 +209,7 @@ class _TreeScreenState extends State<TreeScreen> {
   Widget _rowElement(_TreeNode treeNode, int nestLevel) {
     return Container(
       key: treeNode.key,
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
       child: Row(
         children: [
@@ -221,8 +221,8 @@ class _TreeScreenState extends State<TreeScreen> {
               (treeNode.expand) ? Icons.arrow_drop_up : Icons.arrow_drop_down,
               size: 32.0,
               color: (treeNode.children == null || treeNode.children.isEmpty)
-                  ? Colors.grey
-                  : Colors.black,
+                  ? Theme.of(context).disabledColor
+                  : Theme.of(context).colorScheme.onSurface,
             ),
             onTap: (treeNode.children == null || treeNode.children.isEmpty)
                 ? null
@@ -289,7 +289,8 @@ class _TreeScreenState extends State<TreeScreen> {
       nestedLvStack.removeLast();
 
       rowList.add(_rowElement(currTreeNode, currNestedLv));
-      rowList.add(Divider(height: 1, thickness: 1, color: Colors.black));
+      rowList.add(Divider(
+          height: 1, thickness: 1, color: Theme.of(context).shadowColor));
       if (currTreeNode.expand) {
         final it =
             (reversed) ? currTreeNode.children.reversed : currTreeNode.children;

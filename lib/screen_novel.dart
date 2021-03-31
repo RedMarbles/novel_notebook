@@ -10,9 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/screen_tree.dart';
+import 'package:novelnotebook/themes.dart' as myThemes;
 import 'package:sqflite/sqflite.dart';
 
 class NovelScreen extends StatefulWidget {
+  final Function(ThemeData) themeCallback;
+
+  NovelScreen(this.themeCallback);
+
   @override
   _NovelScreenState createState() => _NovelScreenState();
 }
@@ -20,6 +25,7 @@ class NovelScreen extends StatefulWidget {
 class _NovelScreenState extends State<NovelScreen> {
   Database database;
   bool loadingDb = false;
+  bool useDarkTheme = false;
   List<String> databaseNames = [];
 
   @override
@@ -50,8 +56,18 @@ class _NovelScreenState extends State<NovelScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Novel Selection'),
+        actions: [
+          Switch(
+              value: useDarkTheme,
+              onChanged: (value) {
+                setState(() {
+                  useDarkTheme = value;
+                });
+                widget.themeCallback(
+                    (useDarkTheme) ? myThemes.darkTheme : myThemes.lightTheme);
+              })
+        ],
       ),
-      backgroundColor: Colors.blueGrey,
       body: Stack(
         children: [
           Column(
@@ -95,7 +111,7 @@ class _NovelScreenState extends State<NovelScreen> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         margin: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
       ),
       onPressed: () {
         setState(() {

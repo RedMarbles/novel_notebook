@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/screen_novel.dart';
+import 'package:novelnotebook/themes.dart' as MyThemes;
 
 void main() {
   runApp(MyApp());
@@ -7,29 +8,26 @@ void main() {
 
 // TODO: Create a digital certificate for the app
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeData themeData = MyThemes.lightTheme;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Novel Notebook',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        // This makes the visual density adapt to the platform that you run
-        // the app on. For desktop platforms, the controls will be smaller and
-        // closer together (more dense) than on mobile platforms.
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: NovelScreen(),
+      theme: themeData,
+      home: NovelScreen(themeCallback),
     );
+  }
+
+  void themeCallback(ThemeData newThemeData) {
+    setState(() {
+      themeData = newThemeData;
+    });
   }
 }

@@ -263,7 +263,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget _nicknameView(models.Nickname nickname) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.green,
+        color: Theme.of(context).colorScheme.secondary,
         borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -272,7 +272,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           InkWell(
-            child: Text(nickname.name),
+            child: Text(
+              nickname.name,
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+            ),
             onTap: () async {
               // Popup to edit nickname
               String res = await showTextEditDialog(context,
@@ -284,7 +288,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
             },
           ),
           InkWell(
-            child: Icon(Icons.cancel),
+            child: Icon(
+              Icons.cancel,
+              color: Theme.of(context).colorScheme.onSecondary,
+            ),
             onTap: () async {
               // Delete nickname from list
               developer.log('Deleting nickname ${nickname.name}');
@@ -497,7 +504,10 @@ class _WrapListViewer extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       margin: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-          border: Border.all(width: 2, color: Colors.grey),
+          border: Border.all(
+            width: 2,
+            color: Theme.of(context).colorScheme.primaryVariant,
+          ),
           borderRadius: BorderRadius.circular(8)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,27 +554,29 @@ class _NoteThreadViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.yellow.shade300,
+      color: Theme.of(context).colorScheme.surface,
       margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: _noteThreadChildren,
+        children: _noteThreadChildren(context),
       ),
     );
   }
 
-  List<Widget> get _noteThreadChildren {
+  List<Widget> _noteThreadChildren(BuildContext context) {
     final result = <Widget>[
       Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
       GestureDetector(
         child: Container(
-          color: Colors.yellow.shade600,
+          color: Theme.of(context).colorScheme.surface,
           width: double.infinity,
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
           child: Text(noteThread.description,
-              style: TextStyle(fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface)),
         ),
         onTap: () {
           editNoteThreadDescriptionCallback(noteThread);
@@ -577,7 +589,8 @@ class _NoteThreadViewer extends StatelessWidget {
     ];
     noteThread.notes.reversed.forEach((note) {
       result.add(_NoteViewer(note, editNoteCallback, deleteNoteCallback));
-      result.add(Divider(height: 0, thickness: 1, color: Colors.grey.shade800));
+      result.add(Divider(
+          height: 0, thickness: 1, color: Theme.of(context).shadowColor));
     });
 
     return result;
@@ -607,9 +620,17 @@ class _NoteViewer extends StatelessWidget {
                   Text(
                     'Chapter ${note.chapter}',
                     style: TextStyle(
-                        color: Colors.grey, fontWeight: FontWeight.bold),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withAlpha(120),
+                        fontWeight: FontWeight.bold),
                   ),
-                  Text(note.message),
+                  Text(
+                    note.message,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface),
+                  ),
                 ],
               ),
             ),
