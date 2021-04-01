@@ -41,6 +41,7 @@ Future<bool> showConfirmationDialog(
   String okButtonText = 'Yes',
   String cancelButtonText = 'No',
   bool defaultValue = false,
+  bool markDangerous = false,
 }) async {
   bool res = await showDialog<bool>(
     context: context,
@@ -56,6 +57,12 @@ Future<bool> showConfirmationDialog(
         ),
         TextButton(
           child: Text(okButtonText),
+          style: (markDangerous)
+              ? ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all(
+                      Theme.of(context).colorScheme.error),
+                )
+              : null,
           onPressed: () {
             Navigator.pop(context, true);
           },

@@ -147,6 +147,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       okButtonText: 'Delete',
       cancelButtonText: 'Cancel',
       defaultValue: false,
+      markDangerous: true,
     );
     if (deleted) {
       // TODO: Implement deletion of node
