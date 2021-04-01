@@ -50,10 +50,12 @@ class TreeScreen extends StatefulWidget {
 
 class _TreeScreenState extends State<TreeScreen> {
   _TreeNode root;
+  int numLoadingNodes = 0;
+
+  // Don't call setState for changes to these
   Map<int, models.Category> categories;
   Map<int, List<int>> children;
   Map<int, models.Node> nodes;
-  int numLoadingNodes = 0;
 
   @override
   void initState() {
@@ -112,7 +114,7 @@ class _TreeScreenState extends State<TreeScreen> {
       ),
       body: Stack(children: [
         ListView(
-          children: _generateTreeStructure(reversed: true),
+          children: _generateTreeStructure(root, reversed: true),
         ),
         Center(
           child: (numLoadingNodes < 1 && root != null)
@@ -196,11 +198,10 @@ class _TreeScreenState extends State<TreeScreen> {
       models.getNodes(widget.database),
       models.getAllChildIds(widget.database),
     ]);
-    setState(() {
-      categories = futures[0];
-      nodes = futures[1];
-      children = futures[2];
-    });
+
+    categories = futures[0];
+    nodes = futures[1];
+    children = futures[2];
 
     unsetLoadingState();
   }
@@ -273,13 +274,14 @@ class _TreeScreenState extends State<TreeScreen> {
     );
   }
 
-  List<Widget> _generateTreeStructure({bool reversed = false}) {
+  List<Widget> _generateTreeStructure(_TreeNode rootNode,
+      {bool reversed = false}) {
     final rowList = <Widget>[];
-    if (root == null) return rowList;
+    if (rootNode == null) return rowList;
 
     final treeNodeStack = <_TreeNode>[];
     final nestedLvStack = <int>[];
-    treeNodeStack.add(root);
+    treeNodeStack.add(rootNode);
     nestedLvStack.add(0);
 
     while (treeNodeStack.isNotEmpty) {
