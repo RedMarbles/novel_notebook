@@ -177,8 +177,11 @@ class _TreeScreenState extends State<TreeScreen> {
             orElse: () => null);
         copyChildTreeNode.expand = origChildTreeNode?.expand ?? false;
 
-        // Add both the orig and child to the stack for processing in the next iteration
-        stack.add(_TreeNodePair(origChildTreeNode, copyChildTreeNode));
+        if (copyTreeNode.expand) {
+          // Add both the orig and child to the stack for processing in
+          // the next iteration if the parent wants to be expanded
+          stack.add(_TreeNodePair(origChildTreeNode, copyChildTreeNode));
+        }
       });
     }
 
@@ -192,6 +195,8 @@ class _TreeScreenState extends State<TreeScreen> {
 
   Future<void> reloadData() async {
     setLoadingState();
+    developer.log('Starting data reload for tree',
+        name: 'screen_tree.TreeScreen.reloadData()');
 
     final futures = await Future.wait([
       models.getCategories(widget.database),
@@ -202,6 +207,9 @@ class _TreeScreenState extends State<TreeScreen> {
     categories = futures[0];
     nodes = futures[1];
     children = futures[2];
+
+    developer.log('Completed fetching new data for tree',
+        name: 'screen_tree.TreeScreen.reloadData()');
 
     unsetLoadingState();
   }
