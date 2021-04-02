@@ -383,8 +383,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         onTap: () async {
-          final String description = await showTextEditDialog(context,
-              title: 'Create Note Thread...', hintText: 'Thread description');
+          final String description = await showTextEditDialog(
+            context,
+            title: 'Create Note Thread...',
+            hintText: 'Thread description',
+            value: (noteThreads.isEmpty) ? 'Details' : '',
+          );
           if (description != null) {
             await models.addThreadToNode(widget.database, node,
                 threads: noteThreads,
