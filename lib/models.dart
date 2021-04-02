@@ -147,6 +147,33 @@ Future<Metadata> getMetadata(Database db) async {
   return Metadata.fromMap(values);
 }
 
+Future<bool> updateMetadata(Database db, Map<String, String> newValues) async {
+  developer.log('Attempting to update metadata',
+      name: 'models.updateMetadata()');
+
+  // Make sure all the keys are valid
+  final String firstInvalidKey = newValues.keys.firstWhere(
+      (key) => !Metadata.defaults.containsKey(key),
+      orElse: () => null);
+  if (firstInvalidKey != null) {
+    developer.log('Error: Invalid key found : \"$firstInvalidKey\"');
+    return false;
+  }
+
+  final keys = newValues.keys.toList();
+  for (int i = 0; i < keys.length; ++i) {
+    final String key = keys[i];
+    await db.update(
+      'metadata',
+      {'dataValue': newValues[key]},
+      where: 'dataId = ?',
+      whereArgs: [key],
+    );
+  }
+
+  return true;
+}
+
 // Retrieve the list of all categories
 Future<Map<int, Category>> getCategories(Database db) async {
   developer.log('Attempting to fetch information about categories',
