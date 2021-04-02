@@ -415,9 +415,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: Text('Add Note'),
         ),
         onTap: () async {
-          // TODO: Suggest the chapter number from the metadata
+          // Create a dummy note that contains the current chapter number
+          final dummyNote =
+              models.Note(-1, '', double.parse(metadata.values['lastChapter']));
           final models.Note note = await showNoteEditDialog(
             context,
+            note: dummyNote,
             title: 'Create new note',
             okButtonText: 'Create',
             cancelButtonText: 'Cancel',
@@ -427,6 +430,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
             await models.addNoteToThread(
                 widget.database, noteThread, note.chapter,
                 message: note.message);
+            if (note.chapter != dummyNote.chapter) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Updated latest chapter to ${note.chapter}',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSecondary)),
+                duration: Duration(milliseconds: 1500),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ));
+              models.updateMetadata(
+                widget.database,
+                {'lastChapter': note.chapter.toString()},
+              );
+            }
             reloadState();
           }
         },
