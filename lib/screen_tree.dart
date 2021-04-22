@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_details.dart';
 import 'package:novelnotebook/database.dart';
+import 'package:novelnotebook/screen_searchNode.dart';
 import 'package:sqflite/sqflite.dart';
 
 // TODO: Keep track of current chapter number, allow easy editing of current chapter number
@@ -97,7 +98,21 @@ class _TreeScreenState extends State<TreeScreen> {
               child: Icon(Icons.search),
             ),
             onTap: () async {
-              // TODO: Load the search bar and execute the search action
+              // Load the search bar and execute the search action
+              final models.Node searchedNode = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SearchNodeScreen(widget.database, [], categories)));
+              if (searchedNode != null) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DetailsScreen(
+                            widget.database, searchedNode.nodeId))).then((_) {
+                  reloadTree();
+                });
+              }
             },
           ),
           InkWell(
