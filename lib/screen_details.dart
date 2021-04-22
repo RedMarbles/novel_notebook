@@ -220,10 +220,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            parent.name,
-            style: TextStyle(
-                color: Color(categories[parent.categoryId].catTextColor)),
+          GestureDetector(
+            child: Text(
+              parent.name,
+              style: TextStyle(
+                  color: Color(categories[parent.categoryId].catTextColor)),
+            ),
+            onTap: () => _openParent(parent),
           ),
           GestureDetector(
             child: Icon(
@@ -337,6 +340,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
       await models.addParent(widget.database, node, newParent);
       reloadState();
     }
+  }
+
+  void _openParent(models.Node parentNode) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                DetailsScreen(widget.database, parentNode.nodeId))).then((_) {
+      reloadState();
+    });
   }
 
   List<Widget> _noteThreadList() {
