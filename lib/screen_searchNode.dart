@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -17,11 +18,16 @@ class SearchNodeScreen extends StatefulWidget {
 
 class _SearchNodeScreenState extends State<SearchNodeScreen> {
   List<Node> searchResultNodes = [];
+  HashSet<int> excludedIds = HashSet<int>();
   final controller = TextEditingController(text: '');
 
   @override
   void initState() {
     super.initState();
+
+    widget.excludedNodes.forEach((Node node) {
+      excludedIds.add(node.nodeId);
+    });
 
     controller.addListener(queryTextInDatabase);
     queryTextInDatabase(); // Load the initial results
@@ -29,15 +35,12 @@ class _SearchNodeScreenState extends State<SearchNodeScreen> {
 
   void queryTextInDatabase() async {
     final List<Node> result = await queryNodes(widget.db, controller.text);
+    developer.log("Calling queryText with value ${controller.text}",
+        name: "screen_searchNode.queryTextInDatabase()");
     setState(() {
       // Keep only the nodes that have not been excluded
       searchResultNodes = result
-          .where((Node node) =>
-              widget.excludedNodes
-                  .firstWhere((Node exclNode) => exclNode.nodeId == node.nodeId,
-                      orElse: () => Node(-1, 'dummy', -1))
-                  .nodeId ==
-              -1)
+          .where((Node node) => !excludedIds.contains(node.nodeId))
           .toList();
     });
   }
@@ -90,6 +93,11 @@ class _SearchNodeScreenState extends State<SearchNodeScreen> {
                       ),
                     ),
                     onTap: () {
+                      // Need to manually do this, because otherwise it continues
+                      // to call the callback even after the widget state has been
+                      // destroyed
+                      controller.removeListener(queryTextInDatabase);
+
                       Navigator.pop(context, searchResultNodes[index]);
                     }),
               ),
