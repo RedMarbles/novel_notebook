@@ -25,7 +25,7 @@ class NovelScreen extends StatefulWidget {
 class _NovelScreenState extends State<NovelScreen> {
   Database database;
   bool loadingDb = false;
-  bool useDarkTheme = false;
+  bool useDarkTheme = true;
   List<String> databaseNames = [];
 
   @override
