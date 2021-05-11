@@ -8,6 +8,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart' as models;
+import 'package:novelnotebook/screen_categories.dart';
 import 'package:novelnotebook/screen_details.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/screen_searchNode.dart';
@@ -120,8 +121,15 @@ class _TreeScreenState extends State<TreeScreen> {
               padding: EdgeInsets.all(8),
               child: Icon(Icons.group),
             ),
-            onTap: () async {
-              // TODO: Switch to screen to add, edit and delete categories and edit their colors
+            onTap: () {
+              // Switch to screen to add, edit and delete categories and edit their colors
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          CategoriesScreen(widget.database))).then((value) {
+                reloadTree();
+              });
             },
           ),
           SizedBox(width: 8.0),

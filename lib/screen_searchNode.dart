@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart';
+import 'package:novelnotebook/widget_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SearchNodeScreen extends StatefulWidget {
@@ -69,29 +70,9 @@ class _SearchNodeScreenState extends State<SearchNodeScreen> {
                 scrollDirection: Axis.vertical,
                 itemCount: searchResultNodes.length,
                 itemBuilder: (_, index) => InkWell(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 24.0),
-                      margin:
-                          EdgeInsets.symmetric(vertical: 4.0, horizontal: 0.0),
-                      child: Text(
+                    child: NodeListElement.fromCategory(
                         searchResultNodes[index].name,
-                        style: TextStyle(
-                          color: Color(widget
-                              .categories[searchResultNodes[index].categoryId]
-                              .catTextColor),
-                        ),
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
-                        ),
-                        color: Color(widget
-                            .categories[searchResultNodes[index].categoryId]
-                            .catColor),
-                      ),
-                    ),
+                        widget.categories[searchResultNodes[index].categoryId]),
                     onTap: () {
                       // Need to manually do this, because otherwise it continues
                       // to call the callback even after the widget state has been
