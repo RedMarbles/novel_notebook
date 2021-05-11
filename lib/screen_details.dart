@@ -569,7 +569,7 @@ class _WrapListViewer extends StatelessWidget {
   }
 }
 
-class _NoteThreadViewer extends StatelessWidget {
+class _NoteThreadViewer extends StatefulWidget {
   final models.NoteThread noteThread;
   final Function(models.NoteThread) editNoteThreadDescriptionCallback;
   final Function(models.NoteThread) deleteNoteThreadCallback;
@@ -586,6 +586,13 @@ class _NoteThreadViewer extends StatelessWidget {
       this.deleteNoteCallback);
 
   @override
+  __NoteThreadViewerState createState() => __NoteThreadViewerState();
+}
+
+class __NoteThreadViewerState extends State<_NoteThreadViewer> {
+  bool expanded = true;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       color: Theme.of(context).colorScheme.surface,
@@ -593,12 +600,12 @@ class _NoteThreadViewer extends StatelessWidget {
       width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: _noteThreadChildren(context),
+        children: _noteThreadChildren(context, expanded),
       ),
     );
   }
 
-  List<Widget> _noteThreadChildren(BuildContext context) {
+  List<Widget> _noteThreadChildren(BuildContext context, bool expandNotes) {
     final result = <Widget>[
       Divider(height: 0, thickness: 1, color: Colors.grey.shade800),
       GestureDetector(
@@ -607,25 +614,34 @@ class _NoteThreadViewer extends StatelessWidget {
           width: double.infinity,
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: Text(noteThread.description,
+          child: Text(widget.noteThread.description,
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface)),
         ),
         onTap: () {
-          editNoteThreadDescriptionCallback(noteThread);
+          setState(() {
+            expanded = !expanded;
+          });
         },
         onLongPress: () {
-          deleteNoteThreadCallback(noteThread);
+          widget.editNoteThreadDescriptionCallback(widget.noteThread);
+          // TODO: add a context menu here
+          // widget.deleteNoteThreadCallback(widget.noteThread);
         },
       ),
-      addNoteButton(noteThread),
     ];
-    noteThread.notes.reversed.forEach((note) {
-      result.add(_NoteViewer(note, editNoteCallback, deleteNoteCallback));
-      result.add(Divider(
-          height: 0, thickness: 1, color: Theme.of(context).shadowColor));
-    });
+
+    if (expandNotes) {
+      result.add(widget.addNoteButton(widget.noteThread));
+
+      widget.noteThread.notes.reversed.forEach((note) {
+        result.add(_NoteViewer(
+            note, widget.editNoteCallback, widget.deleteNoteCallback));
+        result.add(Divider(
+            height: 0, thickness: 1, color: Theme.of(context).shadowColor));
+      });
+    }
 
     return result;
   }
