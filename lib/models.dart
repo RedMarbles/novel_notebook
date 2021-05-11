@@ -411,10 +411,16 @@ Future<Node> addNode(
     {'name': name, 'categoryId': cat.categoryId},
   );
 
+  final children = await getChildren(db, parentNode.nodeId);
+
   // create link to parent
   final int linkId = await db.insert(
     'nodes_nodes',
-    {'parentId': parentNode.nodeId, 'childId': nodeId, 'sequence': 1},
+    {
+      'parentId': parentNode.nodeId,
+      'childId': nodeId,
+      'sequence': children.length + 1,
+    },
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
   developer.log(
