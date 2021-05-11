@@ -12,6 +12,7 @@ import 'package:novelnotebook/screen_categories.dart';
 import 'package:novelnotebook/screen_details.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/screen_searchNode.dart';
+import 'package:novelnotebook/widget_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 // TODO: Keep track of current chapter number, allow easy editing of current chapter number
@@ -269,23 +270,13 @@ class _TreeScreenState extends State<TreeScreen> {
           ),
           Expanded(
             child: InkWell(
-              child: Container(
-                  width: double.infinity,
-                  height: 32.0,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8)),
-                    color: Color(categories[treeNode.node.categoryId].catColor),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    treeNode.node.name,
-                    style: TextStyle(
-                        color: Color(
-                            categories[treeNode.node.categoryId].catTextColor)),
-                  )),
+              child: NodeListElement.fromCategory(
+                treeNode.node.name,
+                categories[treeNode.node.categoryId],
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                borderRadius: 8,
+              ),
               onTap: () {
                 Navigator.push(
                   context,
