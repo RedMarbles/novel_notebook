@@ -624,10 +624,22 @@ class __NoteThreadViewerState extends State<_NoteThreadViewer> {
             expanded = !expanded;
           });
         },
-        onLongPress: () {
-          widget.editNoteThreadDescriptionCallback(widget.noteThread);
-          // TODO: add a context menu here
-          // widget.deleteNoteThreadCallback(widget.noteThread);
+        onLongPress: () async {
+          int result = await showOptionsDialog(
+              context,
+              [
+                'Edit thread title',
+                'Delete thread',
+              ],
+              title: 'Options');
+          switch (result) {
+            case 0:
+              widget.editNoteThreadDescriptionCallback(widget.noteThread);
+              break;
+            case 1:
+              widget.deleteNoteThreadCallback(widget.noteThread);
+              break;
+          }
         },
       ),
     ];
