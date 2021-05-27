@@ -315,7 +315,7 @@ class _TreeScreenState extends State<TreeScreen> {
       rowList.add(_rowElement(currTreeNode, currNestedLv));
       rowList.add(Divider(
           height: 1, thickness: 1, color: Theme.of(context).shadowColor));
-      if (currTreeNode.expand) {
+      if (currTreeNode.children != null && currTreeNode.expand) {
         final it =
             (reversed) ? currTreeNode.children.reversed : currTreeNode.children;
         it.forEach((element) {
