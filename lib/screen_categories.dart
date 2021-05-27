@@ -62,6 +62,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           }).toList(growable: false),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: Icon(Icons.add),
+        label: Text('Add Category'),
+        onPressed: () async {
+          final String newCatName = await dialogs.showTextEditDialog(
+            context,
+            title: 'New Category Name:',
+            hintText: 'category name...',
+          );
+          if (newCatName != null && newCatName.length > 1) {
+            await models.addCategory(widget.database, newCatName,
+                Colors.white.value, Colors.black.value);
+            reloadCategories();
+          }
+        },
+      ),
     );
   }
 
