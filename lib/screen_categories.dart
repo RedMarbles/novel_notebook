@@ -1,6 +1,8 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
-import 'package:novelnotebook/dialog_utils.dart';
+import 'package:novelnotebook/dialog_utils.dart' as dialogs;
 import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_details.dart';
 import 'package:sqflite/sqflite.dart';
@@ -157,8 +159,23 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
     return Row(
       children: [
         Expanded(child: Text('Background Color:')),
-        // TODO: Add a color picker dialog
-        NodeListElement(' ', backgroundColor: Color(category.catColor)),
+        GestureDetector(
+          child:
+              NodeListElement(' ', backgroundColor: Color(category.catColor)),
+          onTap: () async {
+            final newBgColor = await dialogs.showColorPickerDialog(
+                context, Color(category.catColor),
+                title: 'Category Background Color');
+            developer.log('Selected color: $newBgColor',
+                name: 'CategoryEditScreen.backgroundColorPicker()');
+
+            if (newBgColor != null) {
+              await models.editCategory(widget.database, category,
+                  newColor: newBgColor);
+              reloadData();
+            }
+          },
+        ),
         SizedBox(width: 24.0),
       ],
     );
@@ -168,8 +185,20 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
     return Row(
       children: [
         Expanded(child: Text('Text Color:')),
-        // TODO: Add a color picker dialog
-        NodeListElement(' ', backgroundColor: Color(category.catTextColor)),
+        GestureDetector(
+          child: NodeListElement(' ',
+              backgroundColor: Color(category.catTextColor)),
+          onTap: () async {
+            final newTextColor = await dialogs.showColorPickerDialog(
+                context, Color(category.catTextColor),
+                title: 'Category Text Color');
+            if (newTextColor != null) {
+              await models.editCategory(widget.database, category,
+                  newTextColor: newTextColor);
+              reloadData();
+            }
+          },
+        ),
         SizedBox(width: 24.0),
       ],
     );
@@ -177,7 +206,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
 
   void _editCategoryNameDialog() async {
     // Dialog to edit the name of the current category
-    final String newCatName = await showTextEditDialog(
+    final String newCatName = await dialogs.showTextEditDialog(
       context,
       value: category.catName,
       title: 'Edit Category Name:',

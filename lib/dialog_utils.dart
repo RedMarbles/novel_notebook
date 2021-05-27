@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart' as models;
+import 'package:flex_color_picker/flex_color_picker.dart' as flex;
 
 // Dialog to accept a string as input from the user
 Future<String> showTextEditDialog(BuildContext context,
@@ -190,4 +191,25 @@ Future<int> showOptionsDialog(BuildContext context, List<String> optionsStrings,
   );
 
   return resultIdx;
+}
+
+Future<int> showColorPickerDialog(BuildContext context, Color origColor,
+    {String title = 'Select Color:'}) async {
+  final Color resultColor = await flex.showColorPickerDialog(
+    context,
+    origColor,
+    pickersEnabled: {
+      flex.ColorPickerType.both: false,
+      flex.ColorPickerType.primary: true,
+      flex.ColorPickerType.accent: true,
+      flex.ColorPickerType.bw: false,
+      flex.ColorPickerType.custom: false,
+      flex.ColorPickerType.wheel: true,
+    },
+    heading: Text(title, style: Theme.of(context).textTheme.headline5),
+    subheading: Text('Select Color Shade'),
+    showColorCode: true,
+  );
+
+  return resultColor?.value;
 }
