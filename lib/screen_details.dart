@@ -5,6 +5,7 @@ import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_searchNode.dart';
+import 'package:novelnotebook/widget_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
 /* Screen where the individual details of each item are shown
@@ -182,17 +183,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
             value: node.categoryId,
             items: categories.keys
                 .map((catId) => DropdownMenuItem(
-                    value: catId,
-                    child: Container(
-                      color: Color(categories[catId].catColor),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Text(
+                      value: catId,
+                      child: NodeListElement(
                         categories[catId].catName,
-                        style: TextStyle(
-                            color: Color(categories[catId].catTextColor)),
+                        textColor: Color(categories[catId].catTextColor),
+                        backgroundColor: Color(categories[catId].catColor),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        borderRadius: 8,
                       ),
-                    )))
+                    ))
                 .toList(),
             onChanged: (catId) async {
               await models.editNodeCategory(
