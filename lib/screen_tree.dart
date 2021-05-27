@@ -18,7 +18,7 @@ import 'package:sqflite/sqflite.dart';
 // TODO: Keep track of current chapter number, allow easy editing of current chapter number
 // TODO: Allow changing order of children of each TreeNode
 // TODO: Metadeta editor
-// TODO: Create, edit and delete categories
+// TODO: Delete categories
 // TODO: Scroll bar / slider for viewing more of the tree
 
 class _TreeNode {
@@ -134,6 +134,7 @@ class _TreeScreenState extends State<TreeScreen> {
             },
           ),
           SizedBox(width: 8.0),
+          // TODO: Add action to open the metadata editing screen
         ],
       ),
       body: Stack(children: [
@@ -288,6 +289,9 @@ class _TreeScreenState extends State<TreeScreen> {
                   // Reload the tree when navigating back to this screen
                   reloadTree();
                 });
+              },
+              onLongPress: () {
+                // TODO: Add dialog, with the ability to add new child nodes and rearrange child elements
               },
             ),
           ),

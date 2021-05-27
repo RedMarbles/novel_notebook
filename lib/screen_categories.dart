@@ -39,7 +39,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Categories'),
-        // TODO : Add ability to add categories
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -107,7 +106,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
   models.Category category;
   List<models.Node> nodesInCategory;
 
-  // TODO: Add ability to edit category name and delete category (send all matching nodes to another existing category)
+  // TODO: Add ability to delete category if it has no registered nodes?
 
   @override
   void initState() {

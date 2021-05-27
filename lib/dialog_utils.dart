@@ -128,7 +128,8 @@ Future<models.Note> showNoteEditDialog(
                       signed: false, decimal: true),
                   decoration: InputDecoration(border: OutlineInputBorder()),
                 ),
-              )
+              ),
+              // TODO: Show a button for quickly adding one to the chapter number
             ],
           ),
           SizedBox(height: 8),

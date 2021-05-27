@@ -222,6 +222,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         children: [
           GestureDetector(
             child: Text(
+              // TODO: Turn this into a multi-line field that wraps text if too long for the screen
               parent.name,
               style: TextStyle(
                   color: Color(categories[parent.categoryId].catTextColor)),
@@ -277,6 +278,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         children: [
           InkWell(
             child: Text(
+              // TODO: Turn this into a multi-line field that wraps text if too long for the screen
               nickname.name,
               style:
                   TextStyle(color: Theme.of(context).colorScheme.onSecondary),
@@ -370,6 +372,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     return result;
   }
 
+  // TODO - Redo this into a floating action button
   // Button to add a new widget
   Widget _addThreadButton(int idxForNewThread) {
     return Align(
@@ -416,6 +419,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
+  // TODO: Do something to make this look better
   Widget _addNoteButton(models.NoteThread noteThread) {
     return Align(
       alignment: Alignment.centerRight,
@@ -668,6 +672,7 @@ class _NoteViewer extends StatelessWidget {
 
   _NoteViewer(this.note, this.editNoteCallback, this.deleteNoteCallback);
 
+  // TODO: Instead of a delete button on each note, add a long-press context menu with the options : Edit Note, Delete Note
   @override
   Widget build(BuildContext context) {
     return Row(
