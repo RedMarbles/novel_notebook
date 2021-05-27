@@ -13,10 +13,10 @@ class Category {
   final int categoryId;
   final String catName; // Name of the category
   final int catColor; // Color of the category
-  // TODO : Update this text color according to the database
-  final int catTextColor = 0xff000000; // Color of the text for the category
+  final int catTextColor; // Color of the text for the category
 
-  const Category(this.categoryId, this.catName, this.catColor);
+  const Category(
+      this.categoryId, this.catName, this.catColor, this.catTextColor);
 }
 
 class Node {
@@ -183,6 +183,7 @@ Future<Map<int, Category>> getCategories(Database db) async {
     'categoryId',
     'catName',
     'catColor',
+    'catTextColor',
   ]);
   developer.log(
       'Fetched information about ${result.length} categories in the database',
@@ -194,6 +195,7 @@ Future<Map<int, Category>> getCategories(Database db) async {
       element['categoryId'],
       element['catName'],
       element['catColor'],
+      element['catTextColor'],
     );
   });
 
@@ -347,12 +349,13 @@ Future<List<Node>> getChildren(Database db, int nodeId) async {
 }
 
 // Add a new category
-Future<Category> addCategory(Database db, String catName, int colorVal) async {
+Future<Category> addCategory(
+    Database db, String catName, int colorVal, int textColorVal) async {
   final int catId = await db.insert(
     'categories',
-    {'catName': catName, 'catColor': colorVal},
+    {'catName': catName, 'catColor': colorVal, 'catTextColor': textColorVal},
   );
-  return Category(catId, catName, colorVal);
+  return Category(catId, catName, colorVal, textColorVal);
 }
 
 // Get nodes belonging to a category
@@ -372,10 +375,11 @@ Future<List<Node>> getNodesOfCategory(Database db, Category cat) async {
 
 // Edit existing category
 Future<Category> editCategory(Database db, Category cat,
-    {String newName, int newColor}) async {
+    {String newName, int newColor, int newTextColor}) async {
   final values = {
     'catName': newName ?? cat.catName,
-    'catColor': newColor ?? cat.catColor
+    'catColor': newColor ?? cat.catColor,
+    'catTextColor': newTextColor ?? cat.catTextColor,
   };
 
   final int count = await db.update('categories', values,
@@ -384,7 +388,8 @@ Future<Category> editCategory(Database db, Category cat,
     errorAndRollback();
     return cat;
   }
-  return Category(cat.categoryId, values['catName'], values['catColor']);
+  return Category(cat.categoryId, values['catName'], values['catColor'],
+      values['catTextColor']);
 }
 
 // Delete existing category

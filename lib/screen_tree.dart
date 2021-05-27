@@ -73,8 +73,8 @@ class _TreeScreenState extends State<TreeScreen> {
     root.children = [];
 
     categories = {
-      DEFAULT_CATEGORY_ID:
-          models.Category(DEFAULT_CATEGORY_ID, "Loading...", Colors.white.value)
+      DEFAULT_CATEGORY_ID: models.Category(DEFAULT_CATEGORY_ID, "Loading...",
+          Colors.white.value, Colors.black.value),
     };
 
     // Async task to load the actual tree from the database

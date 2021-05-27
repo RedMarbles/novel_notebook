@@ -23,12 +23,14 @@ const int DEFAULT_CATEGORY_ID = 1;
 
 // TABLE categories
 //   categoryId INTEGER PRIMARY KEY
-//   catName    TEXT
-//   catColor   INT
+//   catName      TEXT
+//   catColor     INT
+//   catTextColor INT
 const CREATE_TABLE_CATEGORIES = 'CREATE TABLE IF NOT EXISTS categories ( '
     'categoryId INTEGER PRIMARY KEY, '
     'catName TEXT, '
-    'catColor INT '
+    'catColor INT, '
+    'catTextColor INT '
     ');';
 
 const int ROOT_NODE_ID = 1;
@@ -293,16 +295,17 @@ Future<void> setupDatabaseV1(Database db) async {
   }
 
   // Add the default categories
-  await db.execute('INSERT INTO categories (categoryId, catName, catColor) '
+  await db.execute(
+      'INSERT INTO categories (categoryId, catName, catColor, catTextColor) '
       'VALUES '
-      '(1, "Default", ${Colors.white.value}), '
-      '(2, "World", ${Colors.green.value}), '
-      '(3, "Person", ${Colors.blue.value}), '
-      '(4, "Organization", ${Colors.yellow.value}), '
-      '(5, "Family", ${Colors.orange.value}), '
-      '(6, "Species", ${Colors.purpleAccent.value}), '
-      '(7, "Item", ${Colors.pinkAccent.value}), '
-      '(8, "Skill", ${Colors.redAccent.value});');
+      '(1, "Default", ${Colors.white.value}, ${Colors.black.value}), '
+      '(2, "World", ${Colors.green.value}, ${Colors.black.value}), '
+      '(3, "Person", ${Colors.blue.value}, ${Colors.black.value}), '
+      '(4, "Organization", ${Colors.yellow.value}, ${Colors.black.value}), '
+      '(5, "Family", ${Colors.orange.value}, ${Colors.black.value}), '
+      '(6, "Species", ${Colors.purpleAccent.value}, ${Colors.black.value}), '
+      '(7, "Item", ${Colors.pinkAccent.value}, ${Colors.black.value}), '
+      '(8, "Skill", ${Colors.redAccent.value}, ${Colors.black.value});');
 
   // Add the root node into the tree at position 1
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '

@@ -24,8 +24,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     super.initState();
 
     categories = {
-      DEFAULT_CATEGORY_ID:
-          models.Category(DEFAULT_CATEGORY_ID, "Loading...", Colors.white.value)
+      DEFAULT_CATEGORY_ID: models.Category(DEFAULT_CATEGORY_ID, "Loading...",
+          Colors.white.value, Colors.black.value)
     };
 
     // Async task to load the actual tree from the database
@@ -95,8 +95,8 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
   void initState() {
     super.initState();
 
-    category =
-        models.Category(DEFAULT_CATEGORY_ID, 'Loading...', Colors.white.value);
+    category = models.Category(DEFAULT_CATEGORY_ID, 'Loading...',
+        Colors.white.value, Colors.black.value);
     nodesInCategory = [];
 
     reloadData();
