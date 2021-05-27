@@ -287,7 +287,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   value: nickname.name,
                   title: 'Edit Nickname:',
                   hintText: 'New nickname...');
-              await models.editNickname(widget.database, nickname, res);
+              if (res != null) {
+                await models.editNickname(widget.database, nickname, res);
+              }
               reloadState();
             },
           ),
