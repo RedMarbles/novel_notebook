@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
+import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/models.dart' as models;
 import 'package:sqflite/sqflite.dart';
 import 'widget_utils.dart';
@@ -104,7 +105,10 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: NodeListElement.fromCategory(category.catName, category),
+          title: GestureDetector(
+            child: NodeListElement.fromCategory(category.catName, category),
+            onTap: _editCategoryNameDialog,
+          ),
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -158,5 +162,20 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
                 color: Color(category.catTextColor))),
       ],
     );
+  }
+
+  void _editCategoryNameDialog() async {
+    // Dialog to edit the name of the current category
+    final String newCatName = await showTextEditDialog(
+      context,
+      value: category.catName,
+      title: 'Edit Category Name:',
+      hintText: 'category name...',
+    );
+
+    if (newCatName != null) {
+      await models.editCategory(widget.database, category, newName: newCatName);
+      reloadData();
+    }
   }
 }
