@@ -118,6 +118,9 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
               SizedBox(height: 12),
               textColorPicker(),
               SizedBox(height: 12),
+              Divider(),
+              Text('Category Elements:'),
+              SizedBox(height: 12),
               ...nodesInCategory.map(
                   (node) => NodeListElement.fromCategory(node.name, category))
             ],
@@ -141,11 +144,8 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
       children: [
         Expanded(child: Text('Background Color:')),
         // TODO: Add a color picker dialog
-        Expanded(
-            child: Container(
-                height: 32,
-                width: double.infinity,
-                color: Color(category.catColor))),
+        NodeListElement(' ', backgroundColor: Color(category.catColor)),
+        SizedBox(width: 24.0),
       ],
     );
   }
@@ -155,11 +155,8 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
       children: [
         Expanded(child: Text('Text Color:')),
         // TODO: Add a color picker dialog
-        Expanded(
-            child: Container(
-                height: 32,
-                width: double.infinity,
-                color: Color(category.catTextColor))),
+        NodeListElement(' ', backgroundColor: Color(category.catTextColor)),
+        SizedBox(width: 24.0),
       ],
     );
   }
