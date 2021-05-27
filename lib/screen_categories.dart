@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:novelnotebook/database.dart';
 import 'package:novelnotebook/dialog_utils.dart';
 import 'package:novelnotebook/models.dart' as models;
+import 'package:novelnotebook/screen_details.dart';
 import 'package:sqflite/sqflite.dart';
 import 'widget_utils.dart';
 
@@ -121,8 +122,21 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
               Divider(),
               Text('Category Elements:'),
               SizedBox(height: 12),
-              ...nodesInCategory.map(
-                  (node) => NodeListElement.fromCategory(node.name, category))
+              ...nodesInCategory.map((node) => GestureDetector(
+                    child: NodeListElement.fromCategory(node.name, category),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              DetailsScreen(widget.database, node.nodeId),
+                        ),
+                      ).then((_) {
+                        // Reload the tree when navigating back to this screen
+                        reloadData();
+                      });
+                    },
+                  ))
             ],
           ),
         ));
