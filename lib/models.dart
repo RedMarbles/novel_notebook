@@ -2,9 +2,9 @@
  */
 
 import 'dart:async';
-import 'dart:developer' as developer;
+import 'dart:developer' as developer; // for logging
 import 'dart:math';
-import 'package:flutter/widgets.dart';
+import 'package:collection/collection.dart';
 import 'package:sqflite/sqflite.dart';
 
 // TODO: Add logging for every function here
@@ -37,23 +37,23 @@ class Nickname {
 // An entire thread of messages
 class NoteThread {
   final int threadId; // Unique identifier
-  final int nodeId; // Id of the node to which this belongs  (might be null)
+  final int? nodeId; // Id of the node to which this belongs
   final String description; // Description/title of the thread
   final int sequence; // Which order in the sequence of threads this belongs to
   final List<Note> notes; // List of messages tied to this thread
 
   const NoteThread(this.threadId,
-      {@required this.notes,
+      {required this.notes,
       this.description = '',
       this.nodeId,
-      this.sequence});
+      this.sequence = 0});
 }
 
 // A single message of a thread
 class Note {
   final int noteId; // Unique identifier
   final String message; // The actual contents of the message
-  final double chapter; // The chapter number or position indicator
+  final double chapter; // The chapter number or position indicator // TODO: Change the chapter number to a decimal type instead of double
 
   const Note(this.noteId, this.message, this.chapter);
 }
@@ -101,17 +101,17 @@ class Metadata {
         defaults); // Initialized as a copy of the default map
     input.keys.forEach((key) {
       // Overwrite only the metadata entries that are in defaults
-      if (defaults.containsKey(key)) temp[key] = input[key];
+      if (defaults.containsKey(key)) temp[key] = input[key]!;
     });
 
     // Check that the index ranges are valid
-    final sourceTypeIdx = int.parse(temp['sourceTypeIdx']);
+    final sourceTypeIdx = int.parse(temp['sourceTypeIdx']!);
     if (sourceTypeIdx < 0 || sourceTypeIdx >= sourceTypeList.length) {
-      temp['sourceTypeIdx'] = defaults['sourceTypeIdx'];
+      temp['sourceTypeIdx'] = defaults['sourceTypeIdx']!;
     }
-    final languageOriIdx = int.parse(temp['languageOrigIdx']);
+    final languageOriIdx = int.parse(temp['languageOrigIdx']!);
     if (languageOriIdx < 0 || languageOriIdx >= languageOrigList.length) {
-      temp['languageOrigIdx'] = defaults['languageOrigIdx'];
+      temp['languageOrigIdx'] = defaults['languageOrigIdx']!;
     }
 
     return Metadata._safeInit(temp);
@@ -152,9 +152,8 @@ Future<bool> updateMetadata(Database db, Map<String, String> newValues) async {
       name: 'models.updateMetadata()');
 
   // Make sure all the keys are valid
-  final String firstInvalidKey = newValues.keys.firstWhere(
-      (key) => !Metadata.defaults.containsKey(key),
-      orElse: () => null);
+  final String? firstInvalidKey = newValues.keys.firstWhereOrNull(
+      (key) => !Metadata.defaults.containsKey(key));
   if (firstInvalidKey != null) {
     developer.log('Error: Invalid key found : \"$firstInvalidKey\"');
     return false;
@@ -203,7 +202,7 @@ Future<Map<int, Category>> getCategories(Database db) async {
 }
 
 // Retrieve a specific node from the 'nodes' table
-Future<Node> getNode(Database db, int nodeId) async {
+Future<Node?> getNode(Database db, int nodeId) async {
   developer.log('Attempting to get node with id $nodeId',
       name: 'models.getNode()');
   final List<Map<String, dynamic>> result = await db.query(
@@ -222,7 +221,7 @@ Future<Node> getNode(Database db, int nodeId) async {
   );
 }
 
-Future<Map<int, Node>> getNodes(Database db) async {
+Future<Map<int, Node>?> getNodes(Database db) async {
   developer.log('Attempting to get all nodes in the database',
       name: 'models.getNodes()');
   final List<Map<String, dynamic>> result = await db.query(
@@ -253,7 +252,7 @@ Future<Map<int, List<int>>> getAllChildIds(Database db) async {
   final output = Map<int, List<int>>();
   result.forEach((Map<String, dynamic> elem) {
     if (output.containsKey(elem['parentId'])) {
-      output[elem['parentId']].add(elem['childId']);
+      output[elem['parentId']]!.add(elem['childId']);
     } else {
       output[elem['parentId']] = <int>[elem['childId']];
     }
@@ -375,7 +374,7 @@ Future<List<Node>> getNodesOfCategory(Database db, Category cat) async {
 
 // Edit existing category
 Future<Category> editCategory(Database db, Category cat,
-    {String newName, int newColor, int newTextColor}) async {
+    {String? newName, int? newColor, int? newTextColor}) async {
   final values = {
     'catName': newName ?? cat.catName,
     'catColor': newColor ?? cat.catColor,
@@ -388,8 +387,10 @@ Future<Category> editCategory(Database db, Category cat,
     errorAndRollback();
     return cat;
   }
-  return Category(cat.categoryId, values['catName'], values['catColor'],
-      values['catTextColor']);
+  return Category(cat.categoryId, 
+      values['catName'] as String, 
+      values['catColor'] as int,
+      values['catTextColor'] as int);
 }
 
 // Delete existing category
@@ -636,7 +637,7 @@ Future<NoteThread> addThreadToNode(
   Node node, {
   String description = "", // A short description or title of the thread
   int sequence = 999999, // Sequence number, 1 is at the top
-  @required List<NoteThread> threads, // Existing threads of the target node
+  required List<NoteThread> threads, // Existing threads of the target node
 }) async {
   // Verify the sequence number, rearrange other threads' sequence numbers if necessary
   if (sequence < 1) sequence = 1;
@@ -677,7 +678,7 @@ Future<NoteThread> addThreadToNode(
 }
 
 Future<NoteThread> editNoteThread(Database db, NoteThread noteThread,
-    {String newDescription, int newSequence}) async {
+    {String? newDescription, int? newSequence}) async {
   developer.log(
       'Attempting to edit note thread #${noteThread.threadId}\'s description to "$newDescription" and sequence number to "$newSequence"',
       name: 'models.editNoteThread()');
@@ -699,15 +700,15 @@ Future<NoteThread> editNoteThread(Database db, NoteThread noteThread,
   return NoteThread(
     noteThread.threadId,
     notes: noteThread.notes,
-    description: values['description'],
+    description: values['description'] as String,
     nodeId: noteThread.nodeId,
-    sequence: values['sequence'],
+    sequence: values['sequence'] as int,
   );
 }
 
 // Edit an existing message
 Future<Note> editNote(Database db, Note note,
-    {String newMessage, double chapter}) async {
+    {String? newMessage, double? chapter}) async {
   final values = {
     'message': newMessage ?? note.message,
     'chapter': chapter ?? note.chapter
@@ -726,7 +727,7 @@ Future<Note> editNote(Database db, Note note,
 
   developer.log('Successfully edited note ${note.noteId}',
       name: 'models.editNote()');
-  return Note(note.noteId, values['message'], values['chapter']);
+  return Note(note.noteId, values['message'] as String, values['chapter'] as double);
 }
 
 // Delete an existing message

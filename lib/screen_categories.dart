@@ -19,7 +19,7 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  Map<int, models.Category> categories;
+  late Map<int, models.Category> categories;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           children: categories.keys.map((catId) {
             return GestureDetector(
               child: NodeListElement.fromCategory(
-                  categories[catId].catName, categories[catId]),
+                  categories[catId]!.catName, categories[catId]!),
               onTap: () {
                 Navigator.push(
                         context,
@@ -65,7 +65,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         icon: Icon(Icons.add),
         label: Text('Add Category'),
         onPressed: () async {
-          final String newCatName = await dialogs.showTextEditDialog(
+          final String? newCatName = await dialogs.showTextEditDialog(
             context,
             title: 'New Category Name:',
             hintText: 'category name...',
@@ -103,8 +103,8 @@ class CategoryEditScreen extends StatefulWidget {
 }
 
 class _CategoryEditScreenState extends State<CategoryEditScreen> {
-  models.Category category;
-  List<models.Node> nodesInCategory;
+  late models.Category category;
+  late List<models.Node> nodesInCategory;
 
   // TODO: Add ability to delete category if it has no registered nodes?
 
@@ -162,10 +162,10 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
   Future<void> reloadData() async {
     final categories = await models.getCategories(widget.database);
     final nodes = await models.getNodesOfCategory(
-        widget.database, categories[widget.catId]);
+        widget.database, categories[widget.catId]!);
 
     setState(() {
-      category = categories[widget.catId];
+      category = categories[widget.catId]!;
       nodesInCategory = nodes;
     });
   }
@@ -178,7 +178,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
           child:
               NodeListElement(' ', backgroundColor: Color(category.catColor)),
           onTap: () async {
-            final newBgColor = await dialogs.showColorPickerDialog(
+            final int? newBgColor = await dialogs.showColorPickerDialog(
                 context, Color(category.catColor),
                 title: 'Category Background Color');
             developer.log('Selected color: $newBgColor',
@@ -204,7 +204,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
           child: NodeListElement(' ',
               backgroundColor: Color(category.catTextColor)),
           onTap: () async {
-            final newTextColor = await dialogs.showColorPickerDialog(
+            final int? newTextColor = await dialogs.showColorPickerDialog(
                 context, Color(category.catTextColor),
                 title: 'Category Text Color');
             if (newTextColor != null) {
@@ -221,7 +221,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
 
   void _editCategoryNameDialog() async {
     // Dialog to edit the name of the current category
-    final String newCatName = await dialogs.showTextEditDialog(
+    final String? newCatName = await dialogs.showTextEditDialog(
       context,
       value: category.catName,
       title: 'Edit Category Name:',

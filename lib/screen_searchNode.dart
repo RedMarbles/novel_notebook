@@ -72,7 +72,8 @@ class _SearchNodeScreenState extends State<SearchNodeScreen> {
                 itemBuilder: (_, index) => InkWell(
                     child: NodeListElement.fromCategory(
                         searchResultNodes[index].name,
-                        widget.categories[searchResultNodes[index].categoryId]),
+                        widget.categories[searchResultNodes[index].categoryId]!, // WARN: assumes category always exists
+                    ),
                     onTap: () {
                       // Need to manually do this, because otherwise it continues
                       // to call the callback even after the widget state has been

@@ -6,6 +6,7 @@
 
 import 'dart:developer' as developer;
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:novelnotebook/models.dart' as models;
 import 'package:novelnotebook/screen_categories.dart';
@@ -24,21 +25,21 @@ import 'package:sqflite/sqflite.dart';
 class _TreeNode {
   final Key key;
   final models.Node node;
-  List<_TreeNode> children; // if null, then it's uninitialized
+  List<_TreeNode>? children; // if null, then it's uninitialized
   bool expand; // Whether this tree's children are expanded or not
 
-  _TreeNode(this.node, {this.key, this.children, this.expand = false});
+  _TreeNode(this.node, {required this.key, this.children, this.expand = false});
 
   void loadChildren(Map<int, models.Node> nodes, Map<int, List<int>> childIds) {
     if (children != null) return;
 
     children = childIds[node.nodeId]
         ?.map((childId) => _TreeNode(
-              nodes[childId],
+              nodes[childId]!,
               key: ValueKey('$key.$childId'),
               expand: false,
             ))
-        ?.toList();
+        .toList();
   }
 }
 
@@ -52,13 +53,13 @@ class TreeScreen extends StatefulWidget {
 }
 
 class _TreeScreenState extends State<TreeScreen> {
-  _TreeNode root;
+  late _TreeNode? root;
   int numLoadingNodes = 0;
 
   // Don't call setState for changes to these
-  Map<int, models.Category> categories;
-  Map<int, List<int>> children;
-  Map<int, models.Node> nodes;
+  late Map<int, models.Category> categories;
+  late Map<int, List<int>> children;
+  late Map<int, models.Node> nodes;
 
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _TreeScreenState extends State<TreeScreen> {
         key: ValueKey('$ROOT_NODE_ID'),
         children: [],
         expand: true);
-    root.children = [];
+    root!.children = [];
 
     categories = {
       DEFAULT_CATEGORY_ID: models.Category(DEFAULT_CATEGORY_ID, "Loading...",
@@ -101,7 +102,7 @@ class _TreeScreenState extends State<TreeScreen> {
             ),
             onTap: () async {
               // Load the search bar and execute the search action
-              final models.Node searchedNode = await Navigator.push(
+              final models.Node? searchedNode = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
@@ -179,7 +180,7 @@ class _TreeScreenState extends State<TreeScreen> {
     await reloadData();
     final stack = <_TreeNodePair>[];
     final _TreeNode rootCopy =
-        _TreeNode(nodes[root.node.nodeId], key: root.key, expand: root.expand);
+        _TreeNode(nodes[root!.node.nodeId]!, key: root!.key, expand: root!.expand);
     stack.add(_TreeNodePair(root, rootCopy));
 
     while (stack.isNotEmpty) {
@@ -197,9 +198,8 @@ class _TreeScreenState extends State<TreeScreen> {
 
       copyTreeNode.children?.forEach((copyChildTreeNode) {
         // Find a matching node among the original's children, else is null
-        final origChildTreeNode = origTreeNode.children?.firstWhere(
-            (element) => element.node.nodeId == copyChildTreeNode.node.nodeId,
-            orElse: () => null);
+        final origChildTreeNode = origTreeNode.children?.firstWhereOrNull(
+            (element) => element.node.nodeId == copyChildTreeNode.node.nodeId);
         copyChildTreeNode.expand = origChildTreeNode?.expand ?? false;
 
         if (copyTreeNode.expand) {
@@ -229,9 +229,9 @@ class _TreeScreenState extends State<TreeScreen> {
       models.getAllChildIds(widget.database),
     ]);
 
-    categories = futures[0];
-    nodes = futures[1];
-    children = futures[2];
+    categories = futures[0] as Map<int, models.Category>;
+    nodes = futures[1] as Map<int, models.Node>;
+    children = futures[2] as Map<int, List<int>>;
 
     developer.log('Completed fetching new data for tree',
         name: 'screen_tree.TreeScreen.reloadData()');
@@ -254,14 +254,14 @@ class _TreeScreenState extends State<TreeScreen> {
             child: Icon(
               (treeNode.expand) ? Icons.arrow_drop_up : Icons.arrow_drop_down,
               size: 32.0,
-              color: (treeNode.children == null || treeNode.children.isEmpty)
+              color: (treeNode.children == null || treeNode.children!.isEmpty)
                   ? Theme.of(context).disabledColor
                   : Theme.of(context).colorScheme.onSurface,
             ),
-            onTap: (treeNode.children == null || treeNode.children.isEmpty)
+            onTap: (treeNode.children == null || treeNode.children!.isEmpty)
                 ? null
                 : () {
-                    treeNode.children.forEach((element) {
+                    treeNode.children!.forEach((element) {
                       element.loadChildren(nodes, children);
                     });
                     setState(() {
@@ -273,7 +273,7 @@ class _TreeScreenState extends State<TreeScreen> {
             child: InkWell(
               child: NodeListElement.fromCategory(
                 treeNode.node.name,
-                categories[treeNode.node.categoryId],
+                categories[treeNode.node.categoryId]!, // WARN: assumes category always exists
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 borderRadius: 8,
@@ -300,7 +300,7 @@ class _TreeScreenState extends State<TreeScreen> {
     );
   }
 
-  List<Widget> _generateTreeStructure(_TreeNode rootNode,
+  List<Widget> _generateTreeStructure(_TreeNode? rootNode,
       {bool reversed = false}) {
     final rowList = <Widget>[];
     if (rootNode == null) return rowList;
@@ -321,8 +321,8 @@ class _TreeScreenState extends State<TreeScreen> {
           height: 1, thickness: 1, color: Theme.of(context).shadowColor));
       if (currTreeNode.children != null && currTreeNode.expand) {
         final it =
-            (reversed) ? currTreeNode.children.reversed : currTreeNode.children;
-        it.forEach((element) {
+            (reversed) ? currTreeNode.children?.reversed : currTreeNode.children;
+        it?.forEach((element) {
           treeNodeStack.add(element);
           nestedLvStack.add(currNestedLv + 1);
         });
@@ -335,7 +335,7 @@ class _TreeScreenState extends State<TreeScreen> {
 
 // Helper class to create a stack of pairs of _TreeNodes
 class _TreeNodePair {
-  final _TreeNode original;
+  final _TreeNode? original;
   final _TreeNode copy;
 
   _TreeNodePair(this.original, this.copy);

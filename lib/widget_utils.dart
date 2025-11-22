@@ -5,9 +5,9 @@ class NodeListElement extends StatelessWidget {
   final String title;
   final Color backgroundColor;
   final Color textColor;
-  final EdgeInsetsGeometry padding;
-  final EdgeInsetsGeometry margin;
-  final double borderRadius;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double? borderRadius;
 
   NodeListElement(
     this.title, {
@@ -21,9 +21,9 @@ class NodeListElement extends StatelessWidget {
   factory NodeListElement.fromCategory(
     String title,
     models.Category category, {
-    EdgeInsetsGeometry padding,
-    EdgeInsetsGeometry margin,
-    double borderRadius,
+    EdgeInsetsGeometry? padding,
+    EdgeInsetsGeometry? margin,
+    double? borderRadius,
   }) {
     return NodeListElement(
       title,

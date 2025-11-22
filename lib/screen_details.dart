@@ -54,12 +54,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
       models.getMetadata(widget.database),
     ]).then((futures) {
       setState(() {
-        node = futures[0];
-        parents = futures[1];
-        nicknames = futures[2];
-        noteThreads = futures[3];
-        categories = futures[4];
-        metadata = futures[5];
+        node = futures[0] as models.Node;
+        parents = futures[1] as List<models.Node>;
+        nicknames = futures[2] as List<models.Nickname>;
+        noteThreads = futures[3] as List<models.NoteThread>;
+        categories = futures[4] as Map<int, models.Category>;
+        metadata = futures[5] as models.Metadata;
       });
       developer.log(
           "Extracted node ${widget.nodeId} - ${node.name} under category ${node.categoryId}",
@@ -103,7 +103,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             parents.map((p) => _parentView(p)).toList(),
             title: 'Parents:',
             addCallback:
-                (node.nodeId == ROOT_NODE_ID) ? null : _addParentDialog,
+                (node.nodeId == ROOT_NODE_ID) ? ()=>null : _addParentDialog,
           ),
           _WrapListViewer(
             nicknames.map((n) => _nicknameView(n)).toList(),
@@ -128,7 +128,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
     if (newNodeName != null) {
       // Create the new node and navigate to it in the editor
       models.Node newNode = await models.addNode(
-          widget.database, node, categories[node.categoryId], newNodeName);
+        widget.database, 
+        node, 
+        categories[node.categoryId]!, // WARN: Assuming category exists
+        newNodeName);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -160,7 +163,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   // View a dialog to edit the name of the node
   void _editNodeNameDialog() async {
-    final String newName = await showTextEditDialog(
+    final String? newName = await showTextEditDialog(
       context,
       value: node.name,
       title: 'Edit Node Name...',
@@ -185,9 +188,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 .map((catId) => DropdownMenuItem(
                       value: catId,
                       child: NodeListElement(
-                        categories[catId].catName,
-                        textColor: Color(categories[catId].catTextColor),
-                        backgroundColor: Color(categories[catId].catColor),
+                        categories[catId]!.catName, 
+                        textColor: Color(categories[catId]!.catTextColor),
+                        backgroundColor: Color(categories[catId]!.catColor),
                         padding:
                             EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                         borderRadius: 8,
@@ -198,7 +201,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               await models.editNodeCategory(
                 widget.database,
                 node,
-                categories[catId],
+                categories[catId]!, 
               );
               reloadState();
             },
@@ -211,7 +214,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget _parentView(models.Node parent) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(categories[parent.categoryId].catColor),
+        color: Color(categories[parent.categoryId]!.catColor),
         border: Border.all(width: 1.0),
         borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
@@ -225,14 +228,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
               // TODO: Turn this into a multi-line field that wraps text if too long for the screen
               parent.name,
               style: TextStyle(
-                  color: Color(categories[parent.categoryId].catTextColor)),
+                  color: Color(categories[parent.categoryId]!.catTextColor)),
             ),
             onTap: () => _openParent(parent),
           ),
           GestureDetector(
             child: Icon(
               Icons.cancel,
-              color: Color(categories[parent.categoryId].catTextColor),
+              color: Color(categories[parent.categoryId]!.catTextColor),
             ),
             onTap: () async {
               // Delete parent from list if it has more than 2 parents
@@ -285,7 +288,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ),
             onTap: () async {
               // Popup to edit nickname
-              String res = await showTextEditDialog(context,
+              String? res = await showTextEditDialog(context,
                   value: nickname.name,
                   title: 'Edit Nickname:',
                   hintText: 'New nickname...');
@@ -320,7 +323,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _addNicknameDialog() async {
     // Dialog to add a new nickname to the node
-    String newNickname =
+    String? newNickname =
         await showTextEditDialog(context, title: 'Add Nickname: ');
     developer.log('Value returned from Nickname dialog: $newNickname',
         name: 'screen_details._DetailsScreenState._addNicknameDialog()');
@@ -332,7 +335,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _addParentDialog() async {
     // Dialog to add a new parent to the node
-    final models.Node newParent = await Navigator.push(
+    final models.Node? newParent = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => SearchNodeScreen(
@@ -401,7 +404,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           ),
         ),
         onTap: () async {
-          final String description = await showTextEditDialog(
+          final String? description = await showTextEditDialog(
             context,
             title: 'Create Note Thread...',
             hintText: 'Thread description',
@@ -436,8 +439,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
         onTap: () async {
           // Create a dummy note that contains the current chapter number
           final dummyNote =
-              models.Note(-1, '', double.parse(metadata.values['lastChapter']));
-          final models.Note note = await showNoteEditDialog(
+              models.Note(-1, '', double.parse(metadata.values['lastChapter']!));
+          final models.Note? note = await showNoteEditDialog(
             context,
             note: dummyNote,
             title: 'Create new note',
@@ -473,7 +476,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     developer.log(
         'Starting EditNoteDialog for note ${note.noteId} with original message "${note.message}" and chapter number ${note.chapter}',
         name: 'screen_details._editNoteCallback()');
-    final models.Note newNote = await showNoteEditDialog(
+    final models.Note? newNote = await showNoteEditDialog(
       context,
       title: 'Edit note',
       note: note,
@@ -503,7 +506,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _editThreadCallback(models.NoteThread noteThread) async {
-    final String newDescription = await showTextEditDialog(context,
+    final String? newDescription = await showTextEditDialog(context,
         value: noteThread.description,
         title: 'Edit Note Thread title...',
         hintText: 'Note Thread title');
@@ -533,9 +536,9 @@ class _WrapListViewer extends StatelessWidget {
   final List<Widget> items;
 
   // The callback function to call when the + button is pressed
-  final Function() addCallback;
+  final Function()? addCallback;
 
-  _WrapListViewer(this.items, {this.title, this.addCallback});
+  _WrapListViewer(this.items, {required this.title, this.addCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -546,7 +549,7 @@ class _WrapListViewer extends StatelessWidget {
       decoration: BoxDecoration(
           border: Border.all(
             width: 2,
-            color: Theme.of(context).colorScheme.primaryVariant,
+            color: Theme.of(context).colorScheme.primaryContainer,
           ),
           borderRadius: BorderRadius.circular(8)),
       child: Column(
@@ -631,7 +634,7 @@ class __NoteThreadViewerState extends State<_NoteThreadViewer> {
           });
         },
         onLongPress: () async {
-          int result = await showOptionsDialog(
+          int? result = await showOptionsDialog(
               context,
               [
                 'Edit thread title',

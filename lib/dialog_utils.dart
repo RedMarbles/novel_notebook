@@ -3,10 +3,10 @@ import 'package:novelnotebook/models.dart' as models;
 import 'package:flex_color_picker/flex_color_picker.dart' as flex;
 
 // Dialog to accept a string as input from the user
-Future<String> showTextEditDialog(BuildContext context,
+Future<String?> showTextEditDialog(BuildContext context,
     {String value = "", String title = 'Edit:', String hintText = ''}) async {
   final controller = TextEditingController(text: value);
-  String res = await showDialog<String>(
+  String? res = await showDialog<String>(
     context: context,
     builder: (_) => AlertDialog(
       title: Text(title),
@@ -37,14 +37,14 @@ Future<String> showTextEditDialog(BuildContext context,
 // Dialog to ask the user a yes/no question
 Future<bool> showConfirmationDialog(
   BuildContext context, {
-  @required String message,
+  required String message,
   String title = 'Confirmation',
   String okButtonText = 'Yes',
   String cancelButtonText = 'No',
   bool defaultValue = false,
   bool markDangerous = false,
 }) async {
-  bool res = await showDialog<bool>(
+  bool? res = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
       title: Text(title),
@@ -77,7 +77,7 @@ Future<bool> showConfirmationDialog(
 
 Future<void> showMessageDialog(
   BuildContext context, {
-  @required String message,
+  required String message,
   String title = 'Alert!',
   String okButtonText = 'OK',
 }) async {
@@ -98,10 +98,10 @@ Future<void> showMessageDialog(
   );
 }
 
-Future<models.Note> showNoteEditDialog(
+Future<models.Note?> showNoteEditDialog(
   BuildContext context, {
-  models.Note note,
-  @required String title,
+  models.Note? note,
+  required String title,
   String okButtonText = 'OK',
   String cancelButtonText = 'Cancel',
 }) async {
@@ -172,9 +172,9 @@ Future<models.Note> showNoteEditDialog(
   return resultNote;
 }
 
-Future<int> showOptionsDialog(BuildContext context, List<String> optionsStrings,
+Future<int?> showOptionsDialog(BuildContext context, List<String> optionsStrings,
     {String title = 'Options'}) async {
-  final int resultIdx = await showDialog<int>(
+  final int? resultIdx = await showDialog<int>(
     context: context,
     builder: (_) => SimpleDialog(
       title: Text(title),
@@ -207,10 +207,10 @@ Future<int> showColorPickerDialog(BuildContext context, Color origColor,
       flex.ColorPickerType.custom: false,
       flex.ColorPickerType.wheel: true,
     },
-    heading: Text(title, style: Theme.of(context).textTheme.headline5),
+    heading: Text(title, style: Theme.of(context).textTheme.headlineSmall),
     subheading: Text('Select Color Shade'),
     showColorCode: true,
   );
 
-  return resultColor?.value;
+  return resultColor.value;
 }

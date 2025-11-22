@@ -23,7 +23,7 @@ class NovelScreen extends StatefulWidget {
 }
 
 class _NovelScreenState extends State<NovelScreen> {
-  Database database;
+  Database? database;
   bool loadingDb = false;
   bool useDarkTheme = true;
   List<String> databaseNames = [];
@@ -89,7 +89,7 @@ class _NovelScreenState extends State<NovelScreen> {
         ),
         onPressed: () async {
           // Add a new novel after asking for the novel name
-          String novelName = await showTextEditDialog(context,
+          String? novelName = await showTextEditDialog(context,
               value: '', title: 'Create new database:', hintText: 'Novel name');
           if (novelName != null) {
             setState(() {
@@ -127,7 +127,7 @@ class _NovelScreenState extends State<NovelScreen> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => TreeScreen(database),
+                builder: (context) => TreeScreen(database!),
               ));
         });
       },
@@ -144,14 +144,14 @@ class _NovelScreenState extends State<NovelScreen> {
       'Reset Database',
       'Delete Database'
     ];
-    final int choiceIdx = await showOptionsDialog(context, optionsStrings);
+    final int? choiceIdx = await showOptionsDialog(context, optionsStrings);
 
     if (choiceIdx == null) {
       // Do nothing
       return;
     } else if (choiceIdx == 0) {
       // Rename database
-      final String newDbName = await showTextEditDialog(context,
+      final String? newDbName = await showTextEditDialog(context,
           value: dbName, title: 'Rename database', hintText: 'Novel name');
       if (newDbName != null) {
         await renameNovelDatabase(dbName, newDbName);
@@ -165,7 +165,7 @@ class _NovelScreenState extends State<NovelScreen> {
       if (check) {
         final file = await exportNovelDatabase(dbName);
         await showMessageDialog(context,
-            message: 'Database exported to ${file?.path}',
+            message: 'Database exported to ${file.path}',
             title: 'Export complete');
         reloadState(); // Probably unnecessary
       }

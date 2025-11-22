@@ -3,7 +3,8 @@ import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_file_manager/flutter_file_manager.dart';
+// import 'package:flutter_file_manager/flutter_file_manager.dart';
+// import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as PathUtils;
 import 'package:path_provider/path_provider.dart'
     as PathProvider; // TODO: Optional store or copy in external storage directory
@@ -144,7 +145,10 @@ Future<File> exportNovelDatabase(String novelName) async {
       PathUtils.join(await getDatabasesPath(), novelName + _DB_NAME_EXTENSION);
 
   // TODO: make the iOS version of this later
-  final Directory dstDir = await PathProvider.getExternalStorageDirectory();
+  final Directory? dstDir = await PathProvider.getExternalStorageDirectory();
+  if (dstDir == null) {
+    throw Exception('Could not get external storage directory');
+  }
   final dstPath = PathUtils.join(dstDir.path, novelName + _DB_NAME_EXTENSION);
 
   developer.log('Source database location: $srcPath',
@@ -161,13 +165,18 @@ Future<File> exportNovelDatabase(String novelName) async {
 // Search for any database files that might have been left open
 // This happens if the app was closed forcefully by clearing the RAM
 Future<void> closeOpenedDatabases(Directory dir) async {
-  final unclosedFiles = await FileManager(
-    root: dir,
-    filter: SimpleFileFilter(allowedExtensions: [
-      'db-wal',
-      // 'db-shm', // Only search for one of the two temp file types
-    ], fileOnly: true),
-  ).walk().map((e) => e.path).toList();
+  // final unclosedFiles = await FileManager(
+  //   root: dir,
+  //   filter: SimpleFileFilter(allowedExtensions: [
+  //     'db-wal',
+  //     // 'db-shm', // Only search for one of the two temp file types
+  //   ], fileOnly: true),
+  // ).walk().map((e) => e.path).toList();
+
+  final unclosedFiles = dir.listSync().where((file) {
+    final String filename = PathUtils.basename(file.path);
+    return filename.endsWith('db-wal');
+  }).map((file) => file.path).toList();
 
   unclosedFiles.forEach((unclosedFile) {
     // The filename of the unclosed file is without the '-wal' extension
@@ -186,15 +195,23 @@ Future<List<String>> getNovelDatabasesList() async {
   final dir = Directory(await getDatabasesPath());
   await closeOpenedDatabases(dir);
 
-  final files = await FileManager(
-          root: dir,
-          filter: SimpleFileFilter(allowedExtensions: ['db'], fileOnly: true))
-      .walk()
-      .map((FileSystemEntity file) => file.path)
-      .map((String fullFileName) => PathUtils.basename(fullFileName))
-      .map((String filename) =>
-          filename.substring(0, filename.length - _DB_NAME_EXTENSION.length))
-      .toList();
+  // final files = await FileManager(
+  //         root: dir,
+  //         filter: SimpleFileFilter(allowedExtensions: ['db'], fileOnly: true))
+  //     .walk()
+  //     .map((FileSystemEntity file) => file.path)
+  //     .map((String fullFileName) => PathUtils.basename(fullFileName))
+  //     .map((String filename) =>
+  //         filename.substring(0, filename.length - _DB_NAME_EXTENSION.length))
+  //     .toList();
+  
+  final files = dir.listSync().where((file) {
+    final String filename = PathUtils.basename(file.path);
+    return filename.endsWith('.db');
+  }).map((file) => PathUtils.basename(file.path))
+    .map((String filename) =>
+        filename.substring(0, filename.length - _DB_NAME_EXTENSION.length))
+    .toList();
 
   return files;
 }
