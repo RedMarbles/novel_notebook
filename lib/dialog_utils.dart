@@ -60,7 +60,7 @@ Future<bool> showConfirmationDialog(
           child: Text(okButtonText),
           style: (markDangerous)
               ? ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all(
+                  foregroundColor: WidgetStateProperty.all(
                       Theme.of(context).colorScheme.error),
                 )
               : null,
@@ -212,5 +212,5 @@ Future<int> showColorPickerDialog(BuildContext context, Color origColor,
     showColorCode: true,
   );
 
-  return resultColor.value;
+  return resultColor.toARGB32();
 }

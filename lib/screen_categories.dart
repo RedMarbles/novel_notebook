@@ -27,7 +27,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     categories = {
       DEFAULT_CATEGORY_ID: models.Category(DEFAULT_CATEGORY_ID, "Loading...",
-          Colors.white.value, Colors.black.value)
+          Colors.white.toARGB32(), Colors.black.toARGB32())
     };
 
     // Async task to load the actual tree from the database
@@ -72,7 +72,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           );
           if (newCatName != null && newCatName.length > 1) {
             await models.addCategory(widget.database, newCatName,
-                Colors.white.value, Colors.black.value);
+                Colors.white.toARGB32(), Colors.black.toARGB32());
             reloadCategories();
           }
         },
@@ -113,7 +113,7 @@ class _CategoryEditScreenState extends State<CategoryEditScreen> {
     super.initState();
 
     category = models.Category(DEFAULT_CATEGORY_ID, 'Loading...',
-        Colors.white.value, Colors.black.value);
+        Colors.white.toARGB32(), Colors.black.toARGB32());
     nodesInCategory = [];
 
     reloadData();

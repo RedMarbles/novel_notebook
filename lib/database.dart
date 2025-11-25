@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+// import 'package:flutter/widgets.dart';
 // import 'package:flutter_file_manager/flutter_file_manager.dart';
 // import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as PathUtils;
@@ -315,14 +315,14 @@ Future<void> setupDatabaseV1(Database db) async {
   await db.execute(
       'INSERT INTO categories (categoryId, catName, catColor, catTextColor) '
       'VALUES '
-      '(1, "Default", ${Colors.white.value}, ${Colors.black.value}), '
-      '(2, "World", ${Colors.green.value}, ${Colors.black.value}), '
-      '(3, "Person", ${Colors.blue.value}, ${Colors.black.value}), '
-      '(4, "Organization", ${Colors.yellow.value}, ${Colors.black.value}), '
-      '(5, "Family", ${Colors.orange.value}, ${Colors.black.value}), '
-      '(6, "Species", ${Colors.purpleAccent.value}, ${Colors.black.value}), '
-      '(7, "Item", ${Colors.pinkAccent.value}, ${Colors.black.value}), '
-      '(8, "Skill", ${Colors.redAccent.value}, ${Colors.black.value});');
+      '(1, "Default", ${Colors.white.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(2, "World", ${Colors.green.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(3, "Person", ${Colors.blue.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(4, "Organization", ${Colors.yellow.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(5, "Family", ${Colors.orange.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(6, "Species", ${Colors.purpleAccent.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(7, "Item", ${Colors.pinkAccent.toARGB32()}, ${Colors.black.toARGB32()}), '
+      '(8, "Skill", ${Colors.redAccent.toARGB32()}, ${Colors.black.toARGB32()});');
 
   // Add the root node into the tree at position 1
   await db.execute('INSERT INTO nodes (nodeId, name, categoryId) '

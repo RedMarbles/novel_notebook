@@ -75,7 +75,7 @@ class _TreeScreenState extends State<TreeScreen> {
 
     categories = {
       DEFAULT_CATEGORY_ID: models.Category(DEFAULT_CATEGORY_ID, "Loading...",
-          Colors.white.value, Colors.black.value),
+          Colors.white.toARGB32(), Colors.black.toARGB32()),
     };
 
     // Async task to load the actual tree from the database
@@ -91,7 +91,7 @@ class _TreeScreenState extends State<TreeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text('Database'), // TODO: give better name
         actions: [
